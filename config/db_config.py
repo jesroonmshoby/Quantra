@@ -4,7 +4,7 @@ DB_HOST = "localhost"
 DB_USER = "root"
 DB_PASSWORD = "Akshay@2008"
 
-def get_db_connection(db_name):
+def get_db_connection(db_name = None):
     try:
         connection = mysql.connect(
             host=DB_HOST,
