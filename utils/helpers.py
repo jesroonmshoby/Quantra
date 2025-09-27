@@ -18,6 +18,7 @@ def today():
     today=datetime.date.today().strftime("%Y-%m-%d")
     return today
 
+#Date Increment
 def add_days(date_str, n):
     date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
     new_date = date_obj + datetime.timedelta(days=n)
@@ -39,4 +40,5 @@ def clear_screen():
 #Separator
 def separator(length=40):
     print("=" * length)
+
 
