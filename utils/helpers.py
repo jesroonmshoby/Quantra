@@ -10,19 +10,19 @@ def format_currency(amount):
 #Date Formatting
 def format_date(d):
     months = ["January","February","March","April","May","June","July","August","September","October","November","December"]
-    f_date = d[9:11]+" "+months[int(d[6:8])-1]+" "+d[0:4]
+    f_date = d[8:10]+" "+months[int(d[5:7])-1]+" "+d[0:4]
     return f_date
 
 #Current date in SQL Format
 def today():
-    today=date.today().strftime("%Y-%m-%d")
+    today=datetime.date.today().strftime("%Y-%m-%d")
     return today
 
-#Date Increment
 def add_days(date_str, n):
-    date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
-    new_date = date_obj + timedelta(days=n)
+    date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+    new_date = date_obj + datetime.timedelta(days=n)
     return new_date.strftime("%Y-%m-%d")
+
 #Random Stock Price
 def random_stock_price(base_price, volatility=0.05):
     change_percent = random.uniform(-volatility, volatility)
@@ -31,8 +31,12 @@ def random_stock_price(base_price, volatility=0.05):
 
 #Clears Cache
 def clear_screen():
+    if os.name == "nt":
         os.system("cls")
+    else:
+        os.system("clear")
 
 #Separator
 def separator(length=40):
     print("=" * length)
+
