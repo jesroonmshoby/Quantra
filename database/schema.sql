@@ -4,11 +4,20 @@ CREATE DATABASE IF NOT EXISTS quantra_db;
 # Use the database
 USE quantra_db;
 
-# Table -> audit_logs
-CREATE TABLE IF NOT EXISTS audit_logs (
+# Table -> audit_logs / user_logs
+CREATE TABLE IF NOT EXISTS user_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     action VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+# Table -> system_logs
+CREATE TABLE IF NOT EXISTS system_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    level VARCHAR(20) NOT NULL,        -- DEBUG, INFO, WARNING, ERROR, CRITICAL
+    message TEXT NOT NULL,
+    context VARCHAR(100) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
