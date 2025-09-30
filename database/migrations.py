@@ -4,6 +4,13 @@ from utils.logger import Logger
 
 logger = Logger("quantra_db")
 
+conn, err = get_db_connection()
+if conn is None:
+    db_info = "no database selected"
+    # Log the error
+    logger.error(f"Error connecting to MySQL server for {db_info}: {err}", context = "Database Connection")
+    print(f"Error connecting to MySQL server for {db_info}: {err}")
+
 def run_migrations():
     logger.info("Migration process started", context="Migrations")
     connection = None

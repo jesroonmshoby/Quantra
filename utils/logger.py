@@ -69,4 +69,4 @@ class Logger:
     def critical(self, message, context=None):
         self.log_system("CRITICAL", message, context)
 
-    
+print("Logger module loaded.")

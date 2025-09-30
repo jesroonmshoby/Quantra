@@ -1,6 +1,4 @@
 import mysql.connector as mysql
-from utils.logger import Logger
-logger = Logger()
 
 DB_HOST = "localhost"                  
 DB_USER = "root"
@@ -16,8 +14,5 @@ def get_db_connection(db_name = None):
         )
         return connection
     except mysql.Error as err:
-        db_info = db_name if db_name else "no database selected"
-        # Log the error
-        logger.error(f"Error connecting to MySQL server for {db_info}: {err}", context = "Database Connection")
-        print(f"Error connecting to MySQL server for {db_info}: {err}")
+        db_info = db_name
         return None
