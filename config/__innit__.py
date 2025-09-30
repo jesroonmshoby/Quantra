@@ -1,1 +1,2 @@
-from . import db_config
+from . import db_config.py
+from . import setting.py
