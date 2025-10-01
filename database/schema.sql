@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS system_logs (
 # Table -> users
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) UNIQUE NOT NULL,
+    username VARCHAR(30) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -37,26 +37,64 @@ CREATE TABLE IF NOT EXISTS settings (
     setting_value TEXT, # Can store large plain text
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+    
 
-# Table -> transactions
-CREATE TABLE IF NOT EXISTS transactions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    amount DECIMAL(10, 2) NOT NULL,
-    transaction_type ENUM('credit', 'debit') NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
+# Table -> insurance
 CREATE TABLE IF NOT EXISTS insurance (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    policy_number VARCHAR(50) UNIQUE NOT NULL,
+    status ENUM('active', 'expired', 'cancelled') DEFAULT 'active',
+    policy_number VARCHAR(20) UNIQUE NOT NULL,
     coverage_type VARCHAR(100) NOT NULL,
-    premium DECIMAL(10, 2) NOT NULL,
+    coverage_amount DECIMAL(10, 2) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+# Table -> accounts
+CREATE TABLE IF NOT EXISTS accounts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    account_type ENUM('savings', 'current', 'loan') NOT NULL,
+    balance DECIMAL(15,2) DEFAULT 0.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+# Table -> savings_accounts
+CREATE TABLE IF NOT EXISTS savings_accounts (
+    account_id INT PRIMARY KEY,
+    interest_rate DECIMAL(5,2) NOT NULL,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+# Table -> current_accounts
+CREATE TABLE IF NOT EXISTS current_accounts (
+    account_id INT PRIMARY KEY,
+    overdraft_limit DECIMAL(15,2) DEFAULT 0.00,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+# Table -> loan_accounts
+CREATE TABLE IF NOT EXISTS loan_accounts (
+    account_id INT PRIMARY KEY,
+    loan_amount DECIMAL(15,2) NOT NULL,
+    interest_rate DECIMAL(5,2) NOT NULL,
+    due_date DATE NOT NULL,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+# Table -> transactions
+CREATE TABLE IF NOT EXISTS transactions (          
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    account_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    transaction_type ENUM('credit', 'debit') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (account_id) REFERENCES accounts(id)      
 );

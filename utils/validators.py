@@ -66,7 +66,7 @@ def validate_date(date_string):  # Must be YYYY-MM-DD
 
 
 def validate_policy_type(policy_type):
-    if policy_type in ["Life", "Health", "Property", "Auto", "Business"]:
+    if policy_type in ["Life", "Health", "Property", "Auto", "Business"]: # For Insurance policies
         return True
     else:
         return False
