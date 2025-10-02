@@ -41,4 +41,7 @@ def clear_screen():
 def separator(length=40):
     print("=" * length)
 
-
+#Timestamp Convertor
+def format_mysql_datetime(mysql_dt):
+    dt = datetime.strptime(mysql_dt, "%Y-%m-%d %H:%M:%S")
+    return dt.strftime("%d-%b-%Y %I:%M %p")
