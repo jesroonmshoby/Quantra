@@ -43,5 +43,6 @@ def separator(length=40):
 
 #Timestamp Convertor
 def format_mysql_datetime(mysql_dt):
-    dt = datetime.strptime(mysql_dt, "%Y-%m-%d %H:%M:%S")
+    dt = datetime.datetime.strptime(mysql_dt, "%Y-%m-%d %H:%M:%S")
     return dt.strftime("%d-%b-%Y %I:%M %p")
+
