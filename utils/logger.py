@@ -22,7 +22,7 @@ class Logger:
             conn = get_db_connection(self.db_name)
             cursor = conn.cursor()
             cursor.execute(
-                f"INSERT INTO audit_logs (user_id, action) VALUES ({user_id}, {action})"
+                f"INSERT INTO user_logs (user_id, action) VALUES ({user_id}, {action})"
             )
             conn.commit()
             cursor.close()
