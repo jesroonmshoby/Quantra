@@ -39,16 +39,16 @@ def run_migrations():
 
         connection.commit()
         logger.info("Migration of 'Schema.sql' applied successfully", context="Migrations")
-        print("✅ Database and tables migrated successfully.")
+        print("Database and tables migrated successfully.")
 
     except mysql.Error as err:
         logger.error(f"SQL execution failed on query: {query[:50]}... Error: {err}", context="Migrations")
-        print(f"❌ Migration failed: {err}")
+        print(f"Migration failed: {err}")
         return
     
     except FileNotFoundError as fe:
         logger.error(f"Schema file not found: {fe}", context="Migrations")
-        print(f"❌ Schema file not found: {fe}")
+        print(f"Schema file not found: {fe}")
         return
     
     finally:
