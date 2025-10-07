@@ -1,6 +1,5 @@
 import mysql.connector as mysql
-from utils import validators, helpers, logger
-from config.db_config import get_db_connetion
+from config.db_config import get_db_connection
 from utils.logger import Logger
 from utils.validators import validate_username
 from security import hash_password, verify_password, is_strong_password, record_failed_attempt, reset_attempts
@@ -9,7 +8,6 @@ logger = Logger()
 
 
 def register_user(username: str, password: str):
-    """Register a new user after validation and password hashing."""
     if not validate_username(username):
         print("Invalid username format.")
         logger.warning(f"Invalid username format: {username}")
@@ -21,7 +19,7 @@ def register_user(username: str, password: str):
         return False
 
     try:
-        conn = db_config.get_db_connection("quantra_db")
+        conn = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         cursor.execute("SELECT username FROM users WHERE username = %s", (username,))
@@ -49,9 +47,8 @@ def register_user(username: str, password: str):
 
 
 def login_user(username: str, password: str):
-    """Authenticate user with password verification."""
     try:
-        conn = db_config.get_db_connection("quantra_db")
+        conn = get_db_connection("quantra_db")
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
         user = cursor.fetchone()
@@ -88,6 +85,5 @@ def login_user(username: str, password: str):
 
 
 def logout_user(username: str):
-    """Logout action with simple logging."""
     logger.info(f"User logged out: {username}")
     print(f"{username} has logged out successfully.")
