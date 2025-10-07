@@ -16,28 +16,6 @@ def validate_email(email):
     else:
         return False
 
-def validate_password(password):
-    if len(password) < 8:
-        return False
-    has_upper = False
-    has_lower = False
-    has_digit = False
-    has_special = False
-    for ch in password:
-        if ch.isupper():
-            has_upper = True
-        elif ch.islower():
-            has_lower = True
-        elif ch.isdigit():
-            has_digit = True
-        else:
-            has_special = True
-    if has_upper and has_lower and has_digit and has_special:
-        return True
-    else:
-        return False
-
-
 # ---------- ACCOUNTS ----------
 def validate_account_type(acc_type):
     if acc_type in ["savings", "current", "loan"]:
@@ -74,13 +52,6 @@ def validate_loan_amount(amount):
             return True
         else:
             return False
-    except:
-        return False
-
-def validate_due_date(date_string):
-    try:
-        datetime.strptime(date_string, "%Y-%m-%d")
-        return True
     except:
         return False
 
@@ -144,3 +115,4 @@ def validate_start_end_dates(start_date, end_date):
             return False
     except:
         return False
+
