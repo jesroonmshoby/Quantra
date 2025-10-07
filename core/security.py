@@ -23,13 +23,16 @@ def is_strong_password(password: str):
     return True
 
 def lock_account(username):
-    conn = db_config.get_db_connection("quantra_db")
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE users SET locked = TRUE WHERE username = {username}")
-    conn.commit()
-    cursor.close()
-    conn.close()
-
+    try: 
+        conn = db_config.get_db_connection("quantra_db")
+        cursor = conn.cursor()
+        cursor.execute(f"UPDATE users SET locked = TRUE WHERE username = {username}")
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except mysql.error as err:
+        logger.error(f"Failed to lock account {username}: {err}")
+        
 def unlock_account(username):
     try:
         conn = db_config.get_db_connection("quantra_db")
