@@ -1,7 +1,3 @@
-
-
-# core/roles.py
-
 ROLE_PERMISSIONS = {
     "User": [
         "banking_view", "banking_transact",
