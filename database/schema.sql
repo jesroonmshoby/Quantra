@@ -49,6 +49,10 @@ CREATE TABLE IF NOT EXISTS insurance (
     policy_number VARCHAR(20) UNIQUE NOT NULL,
     coverage_type VARCHAR(100) NOT NULL,
     coverage_amount DECIMAL(10, 2) NOT NULL,
+    premium_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,       
+    premium_frequency ENUM('monthly', 'quarterly', 'yearly') DEFAULT 'monthly',  
+    next_premium_due DATE NOT NULL,                            
+    last_paid_date DATE DEFAULT NULL, 
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -61,7 +65,6 @@ CREATE TABLE IF NOT EXISTS accounts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     account_type ENUM('savings', 'current', 'loan') NOT NULL,
-    balance DECIMAL(15,2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -69,6 +72,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 # Table -> savings_accounts
 CREATE TABLE IF NOT EXISTS savings_accounts (
     account_id INT PRIMARY KEY,
+    balance DECIMAL(15,2) NOT NULL,
     interest_rate DECIMAL(5,2) NOT NULL,
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
@@ -76,6 +80,7 @@ CREATE TABLE IF NOT EXISTS savings_accounts (
 # Table -> current_accounts
 CREATE TABLE IF NOT EXISTS current_accounts (
     account_id INT PRIMARY KEY,
+    balance DECIMAL(15,2) NOT NULL,
     overdraft_limit DECIMAL(15,2) DEFAULT 0.00,
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
