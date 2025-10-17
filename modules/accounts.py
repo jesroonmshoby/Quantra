@@ -18,7 +18,7 @@ def create_user(username, email, password):
             logger.error("Password does not meet strength requirements.")
             return None
 
-        
+
         conn = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
@@ -44,5 +44,32 @@ def create_user(username, email, password):
         logger.error(f"Failed to create user {username}: {e}")
         return None
     
+def authenticate_user(email, password):
+    try:
+        conn = get_db_connection("quantra_db")
+        cursor = conn.cursor()
+
+        cursor.execute(f"SELECT id, password_hash, role, locked FROM users WHERE email = {email}")
+        result = cursor.fetchone()
+        if not result:
+            logger.error(f"Email {email} not found.")
+            return None
+        user_id, stored_hashed_password, role, locked = result
+        if locked:
+            logger.error(f"Account with email {email} is locked.")
+            return None
+        if not security.verify_password(password, stored_hashed_password):
+            logger.error(f"Incorrect password for email {email}.")
+            return None
+
+        cursor.close()
+        conn.close()
+        logger.info(f"User with email {email} authenticated successfully.")
+        return {"user_id": user_id, "role": role}
+    except Exception as e:
+        logger.error(f"Authentication failed for email {email}: {e}")
+        return None
+    
+
 
     
