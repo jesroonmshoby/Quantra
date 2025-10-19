@@ -29,7 +29,6 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, prem
             INSERT INTO insurance (
                 user_id, 
                 policy_type,
-                policy_number,
                 premium_amount,
                 coverage_amount,
                 premium_frequency,
@@ -39,7 +38,6 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, prem
                 next_premium_due
             ) VALUES (
                 %s, %s, 
-                CONCAT('POL-', LPAD(LAST_INSERT_ID(), 6, '0')),
                 %s, %s,
                 %s,
                 'active',
@@ -47,7 +45,6 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, prem
                 DATE_ADD(CURDATE(), INTERVAL 1 YEAR),
                 DATE_ADD(CURDATE(), INTERVAL %s MONTH)
             )
-            RETURNING id, policy_number
         """, (
             user_id, 
             policy_type, 
@@ -56,16 +53,17 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, prem
             premium_frequency,
             premium_intervals[premium_frequency]
         ))
-        
-        result = cursor.fetchone()
+
+        result = cursor.lastrowid
+
         if not result:
             logger.error("Failed to create insurance policy")
             return None
             
-        policy_id, policy_number = result
+        policy_id = result
         conn.commit()
         
-        logger.info(f"Created insurance policy {policy_number} for user {user_id}")
+        logger.info(f"Created insurance policy POL-{policy_id:06d} for user {user_id}")
         return policy_id
 
     except Exception as e:
