@@ -14,6 +14,14 @@ def create_account(user_id, account_type, initial_deposit=0.0, interest_rate=Non
         if account_type not in ["savings", "current", "loan"]:
             logger.error(f"Invalid account type: {account_type}")
             return None
+        
+        if account_type == "loan":
+            if not due_date:
+                logger.error(f"Due date is required for loan accounts")
+                return None
+            if interest_rate is None:
+                logger.error(f"Interest rate is required for loan accounts")
+                return None
 
         conn = get_db_connection("quantra_db")
         cursor = conn.cursor()
