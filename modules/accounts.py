@@ -5,7 +5,7 @@ import core.security as security
 
 logger = Logger()
 
-def create_account(user_id, account_type, initial_deposit=0.0, interest_rate=None):
+def create_account(user_id, account_type, initial_deposit=0.0, interest_rate=None, due_date=None):
     try:
         if not validators.validate_amount(initial_deposit):
             logger.error(f"Invalid initial deposit amount: {initial_deposit}")
@@ -42,9 +42,9 @@ def create_account(user_id, account_type, initial_deposit=0.0, interest_rate=Non
 
         elif account_type == "loan":
             cursor.execute("""
-                INSERT INTO loan_accounts (account_id, loan_amount, interest_rate)
-                VALUES (%s, %s, %s)
-            """, (account_id, initial_deposit, interest_rate))
+                INSERT INTO loan_accounts (account_id, loan_amount, interest_rate, due_date)
+                VALUES (%s, %s, %s, %s)
+            """, (account_id, initial_deposit, interest_rate, due_date))
 
         conn.commit()
         logger.info(f"Created {account_type} account (ID: {account_id}) for user {user_id}")
