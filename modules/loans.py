@@ -9,6 +9,16 @@ from utils.logger import Logger
 logger = Logger()
 
 def apply_for_loan(user_id, amount, interest_rate, due_date):
+    
+    # Validate inputs
+    if not validators.validate_loan_amount(amount):
+        logger.error(f"Invalid loan amount: {amount}")
+        return None
+    
+    if not validators.validate_interest_rate(interest_rate):
+        logger.error(f"Invalid interest rate: {interest_rate}")
+        return None
+    
     logger.info(f"Processing loan application for user {user_id} for amount {amount}.")
     
     loan_account_id = create_account(
