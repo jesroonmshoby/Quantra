@@ -52,6 +52,25 @@ class Logger:
         except mysql.Error as err:
             print(f"Failed to log system event: {err}")
 
+    # Transaction Logs
+    def log_transaction(user_id, account_id, amount, transaction_type):
+        try:
+            conn = get_db_connection("quantra_db")
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO transactions (user_id, account_id, amount, transaction_type)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (user_id, account_id, amount, transaction_type)
+            )
+            conn.commit()
+        except Exception as e:
+            print(f"[ERROR] Failed to log transaction: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+
     # Log each level for convenience
     
     def debug(self, message, context=None):
