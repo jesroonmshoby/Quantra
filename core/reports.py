@@ -3,6 +3,7 @@ from config.db_config import get_db_connection  # Already handles connection
 
 # -------------------- ACCOUNT STATEMENT REPORT --------------------
 def print_account_statement(connection, account_type):
+    connection = get_db_connection()
     cursor = connection.cursor()
     account_type = account_type.lower()
 
@@ -73,10 +74,12 @@ def print_account_statement(connection, account_type):
         print("\nInvalid account type! Choose from: savings, current, or loan.")
 
     cursor.close()
+    connection.close()
 
 
 # -------------------- PREMIUM REPORT --------------------
 def print_premium_report(connection):
+    connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute("SELECT id, user_id, policy_number, coverage_type, coverage_amount, premium_amount, premium_frequency, next_premium_due, status FROM insurance")
     policies = cursor.fetchall()
@@ -93,10 +96,12 @@ def print_premium_report(connection):
         print(f"{policy_id:<10} {username:<20} {policy_number:<15} {coverage_type:<20} {coverage_amount:<15.2f} {premium_amount:<12.2f} {frequency:<12} {str(next_due):<15} {status:<10}")
 
     cursor.close()
+    connection.close()
 
 
 # -------------------- LOAN REPORT --------------------
 def print_loan_report(connection):
+    connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute("SELECT account_id, loan_amount, interest_rate, due_date FROM loan_accounts")
     loans = cursor.fetchall()
@@ -116,10 +121,12 @@ def print_loan_report(connection):
         print(f"{username:<20} {account_id:<12} {loan_amount:<15.2f} {interest_rate:<15.2f} {str(due_date):<15}")
 
     cursor.close()
+    connection.close()
 
 
 # -------------------- TRANSACTION REPORT --------------------
 def print_transaction_report(connection):
+    connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute("SELECT id, user_id, account_id, amount, transaction_type, created_at FROM transactions")
     transactions = cursor.fetchall()
@@ -136,10 +143,12 @@ def print_transaction_report(connection):
         print(f"{txn_id:<15} {username:<20} {account_id:<12} {amount:<12.2f} {txn_type:<10} {str(created_at):<25}")
 
     cursor.close()
+    connection.close()
 
 
 # -------------------- USER LOG REPORT --------------------
 def print_user_log_report(connection):
+    connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute("SELECT user_id, action, created_at FROM user_logs")
     logs = cursor.fetchall()
@@ -156,10 +165,12 @@ def print_user_log_report(connection):
         print(f"{username:<20} {action:<50} {str(created_at):<25}")
 
     cursor.close()
+    connection.close()
 
 
 # -------------------- NOTIFICATION REPORT --------------------
 def print_notification_report(connection):
+    connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute("SELECT user_id, message, category, is_read, created_at FROM notifications")
     notifications = cursor.fetchall()
@@ -177,3 +188,4 @@ def print_notification_report(connection):
         print(f"{username:<20} {message:<40} {category:<20} {read_status:<8} {str(created_at):<25}")
 
     cursor.close()
+    connection.close()
