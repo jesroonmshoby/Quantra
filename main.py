@@ -67,9 +67,12 @@ def authorize():
         if choice == '1':
             if login():
                 return True
+            else:
+                return False
         elif choice == '2':
-            if register():
-                return True
+            if not register():
+                return False
+            login()
         else:
             print("Invalid choice. Please enter 1 or 2.")
 
@@ -95,7 +98,7 @@ def get_user_choice():
     while True:
         try:
             menu()
-            choice = int(input("Enter your choice (1-11): ")).strip()
+            choice = int(input("Enter your choice (1-11): "))
             if choice.isdigit() and 1 <= choice <= 11:
                 return int(choice)
             else:
@@ -124,13 +127,32 @@ def user_management_menu():
 
     while True:
         try:
-            choice = int(input("Enter your choice (1-3): ")).strip()
+            choice = int(input("Enter your choice (1-3): "))
             if choice.isdigit() and 1 <= choice <= 3:
                 return int(choice)
             else:
                 print("Invalid choice. Please enter a number between 1 and 3.")
         except ValueError:
             print("Invalid input. Please enter a valid number.")
+
+def accounts_management_menu():
+    print("Accounts Management Menu:")
+    options = [
+        "Create Account",
+        "Delete Account",
+    ]
+    for index, item in enumerate(options):
+        print(f"{index + 1}. - {item}")
+
+    while True:
+        try:
+            choice = int(input("Enter your choice (1-2): ")).strip()
+            if choice.isdigit() and 1 <= choice <= 2:
+                return int(choice)
+            else:
+                print("Invalid choice. Please enter a number between 1 and 2.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
 
 def main():
 
@@ -164,7 +186,7 @@ def main():
             user_choice = user_management_menu()
 
             if user_choice == 1:
-                user_id = int(input("Enter User ID to view details: ").strip())
+                user_id = int(input("Enter User ID to view details: "))
                 details = auth.get_user_details(user_id)
                 if details:
                     print(details)
@@ -195,7 +217,29 @@ def main():
                     print("Failed to change password.")
 
         elif choice == 2:
-            
+            user_choice = accounts_management_menu()
+
+            if user_choice == 1:
+                account_data = {}
+                account_data['account_type'] = input("Enter Account Type: ").strip()
+
+                if account_data['account_type']=='savings' or account_data['account_type']=='checking':
+                    account_data['initial_deposit'] = float(input("Enter Initial Deposit: ").strip())
+                    if accounts.create_account(account_data):
+                        print("Account created successfully.")
+                    else:
+                        print("Failed to create account.")
+                elif account_data['account_type']=='loan':
+                    loans.apply_for_loan()
+                else:
+                    print("Invalid account type. Please choose 'savings', 'checking', or 'loan'.")
+
+            elif user_choice == 2:
+                account_id = int(input("Enter user ID to delete: ").strip())
+                if accounts.delete_account(account_id):
+                    print("Account deleted successfully.")
+                else:
+                    print("Failed to delete account.")
 
 
 

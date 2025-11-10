@@ -29,7 +29,7 @@ def register_user(username: str, email: str, password: str):
             return False
 
         hashed_pw = hash_password(password)
-        cursor.execute("INSERT INTO users (username, email, password) VALUES (%s, %s)", (username, email, hashed_pw))
+        cursor.execute("INSERT INTO users (username, email, password) VALUES (%s, %s, %s)", (username, email, hashed_pw))
         conn.commit()
 
         print("User registered successfully.")
