@@ -12,7 +12,7 @@ def get_db_connection(db_name = None):
             password = DB_PASSWORD,
             database = db_name
         )
-        return connection
+        return connection, None
     except mysql.Error as err:
         db_info = db_name
         return None, err
