@@ -154,6 +154,25 @@ def accounts_management_menu():
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
+def banking_management_menu():
+    print("Banking Management Menu:")
+    options = [
+        "Deposit",
+        "Withdraw",
+    ]
+    for index, item in enumerate(options):
+        print(f"{index + 1}. - {item}")
+
+    while True:
+        try:
+            choice = int(input("Enter your choice (1-2): "))
+            if choice.isdigit() and 1 <= choice <= 2:
+                return int(choice)
+            else:
+                print("Invalid choice. Please enter a number between 1 and 3.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+
 def main():
 
     # Connect to the database
@@ -243,4 +262,20 @@ def main():
 
 
 
-            
+        elif choice == 3:
+            user_choice = banking_management_menu()
+            user_id = int(input("Enter User ID: ").strip())
+            account_id = int(input("Enter Account ID: ").strip())
+            amount = float(input("Enter amount: ").strip())
+
+            if user_choice == 1:
+                if banking.deposit(user_id, account_id, amount):
+                    print("Deposit successful.")
+                else:
+                    print("Deposit failed.")
+
+            elif user_choice == 2:
+                if banking.withdraw(user_id, account_id, amount):
+                    print("Withdrawal successful.")
+                else:
+                    print("Withdrawal failed.")
