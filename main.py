@@ -83,12 +83,8 @@ def menu():
         "Accounts",
         "Banking",
         "Insurance",
-        "Loans",
         "Notifications",
         "Reports",
-        "Roles",
-        "Scheduler",
-        "Security",
         "Exit"
     ]
     for index, item in enumerate(options):
@@ -172,6 +168,26 @@ def banking_management_menu():
                 print("Invalid choice. Please enter a number between 1 and 3.")
         except ValueError:
             print("Invalid input. Please enter a valid number.")
+
+def insurance_menu():
+    print("Insurance Menu:")
+    options = [
+        "View Insurance Details",
+        "Create Insurance Policy",
+        "Cancel Insurance Policy",
+    ]
+    for index, item in enumerate(options):
+        print(f"{index + 1}. - {item}")
+
+    while True:
+        try:
+            choice = int(input("Enter your choice (1-3): ")).strip()
+            if choice.isdigit() and 1 <= choice <= 3:
+                return int(choice)
+            else:
+                print("Invalid choice. Please enter a number between 1 and 3.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
 
 def main():
 
@@ -279,3 +295,33 @@ def main():
                     print("Withdrawal successful.")
                 else:
                     print("Withdrawal failed.")
+
+        elif choice == 4:
+            user_choice = insurance_menu()
+
+            if user_choice == 1:
+                policy_id = int(input("Enter Policy ID to view details: ").strip())
+                details = insurance.get_policy_details(policy_id)
+                if details:
+                    print(details)
+                else:
+                    print("Policy not found.")
+
+            elif user_choice == 2:
+                user_id = int(input("Enter User ID to create policy for: ").strip())
+                policy_data = {}
+                policy_data['type'] = input("Enter policy type: ").strip()
+                policy_data['amount'] = float(input("Enter policy amount: ").strip())
+                if insurance.create_policy(user_id, policy_data):
+                    print("Policy created successfully.")
+                else:
+                    print("Failed to create policy.")
+
+            elif user_choice == 3:
+                policy_id = int(input("Enter Policy ID to cancel: ").strip())
+                if insurance.cancel_policy(policy_id):
+                    print("Policy canceled successfully.")
+                else:
+                    print("Failed to cancel policy.")
+
+        elif choice == 5:

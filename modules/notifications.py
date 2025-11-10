@@ -62,11 +62,11 @@ def send_loan_due_alerts():
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
         cursor.execute("""
-            SELECT u.username, l.due_date, l.amount_due
-            FROM loans l
-            JOIN users u ON l.user_id = u.id
-            WHERE l.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
-            AND l.status = 'active'
+            SELECT users.username, loans.due_date, loans.amount_due
+            FROM loans
+            JOIN users ON loans.user_id = users.id
+            WHERE loans.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
+            AND loans.status = 'active'
         """)
         due_loans = cursor.fetchall()
 
