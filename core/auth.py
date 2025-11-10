@@ -2,7 +2,7 @@ import mysql.connector as mysql
 from config.db_config import get_db_connection
 from utils.logger import Logger
 from utils.validators import validate_username
-from security import hash_password, verify_password, is_strong_password, record_failed_attempt, reset_attempts
+from .security import hash_password, verify_password, is_strong_password, record_failed_attempt, reset_attempts
 
 logger = Logger()
 
@@ -19,7 +19,7 @@ def register_user(username: str, email: str, password: str):
         return False
 
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         cursor.execute("SELECT username FROM users WHERE username = %s", (username,))
@@ -48,7 +48,7 @@ def register_user(username: str, email: str, password: str):
 
 def login_user(username: str, email: str, password: str):
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
         user = cursor.fetchone()
@@ -90,7 +90,7 @@ def logout_user(username: str):
 
 def get_user_details(user_id):
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
         
         cursor.execute(f"""
@@ -142,7 +142,7 @@ def update_user_details(user_id, updates):
             logger.error("No valid fields to update")
             return False
             
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
         
         set_clause = ", ".join([f"{field} = %s" for field in update_fields])
@@ -174,7 +174,7 @@ def change_password(user_id, old_password, new_password):
             logger.error("New password does not meet strength requirements")
             return False
             
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
         
         cursor.execute("""

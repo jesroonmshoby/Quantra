@@ -1,6 +1,7 @@
 import mysql.connector as mysql
 from config.db_config import get_db_connection
-from datetime import date, add_days
+from datetime import date
+from utils.helpers import add_days
 from utils.logger import Logger
 from utils.helpers import format_currency    
 
@@ -8,7 +9,7 @@ logger = Logger()
 
 def apply_loan_interest():
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         cursor.execute(f" SELECT accounts.user_id, accounts.account_type, loan_accounts.loan_amount, loan_accounts.interest_rate, loan_accounts.due_date FROM accounts, loan_accounts WHERE accounts.id = loan_accounts.account_id;")
@@ -53,7 +54,7 @@ def apply_loan_interest():
 
 def apply_savings_interest():
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         cursor.execute(f" SELECT accounts.user_id, accounts.id AS account_id, savings_accounts.balance, savings_accounts.interest_rate FROM accounts, savings_accounts WHERE accounts.id = savings_accounts.account_id;")
@@ -100,7 +101,7 @@ def apply_savings_interest():
 
 def auto_pay_insurance_premiums(insurance_id):
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         cursor.execute(f"""SELECT 
@@ -170,7 +171,7 @@ def auto_pay_insurance_premiums(insurance_id):
     
 def check_insurance_expiry():
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         # Find active policies that have expired
@@ -204,7 +205,7 @@ def check_insurance_expiry():
     
 def process_immediate_transfer(from_account_id, to_account_id, amount):
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         # Check sufficient funds
@@ -247,7 +248,7 @@ def process_immediate_transfer(from_account_id, to_account_id, amount):
     
 def check_upcoming_deadlines(warning_days=3):
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
         cursor.execute(f"""
             SELECT 
@@ -330,7 +331,7 @@ def run_daily_tasks():
 
 
         # Process insurance premiums due today
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
         cursor.execute("SELECT id FROM insurance WHERE next_premium_due = CURDATE()")
         due_premiums = cursor.fetchall()

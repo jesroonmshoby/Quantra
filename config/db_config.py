@@ -15,4 +15,4 @@ def get_db_connection(db_name = None):
         return connection
     except mysql.Error as err:
         db_info = db_name
-        return None
+        return None, err

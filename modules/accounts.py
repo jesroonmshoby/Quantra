@@ -23,7 +23,7 @@ def create_account(user_id, account_type, initial_deposit=0.0, interest_rate=Non
                 logger.error(f"Interest rate is required for loan accounts")
                 return None
 
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         # Create base account
@@ -68,7 +68,7 @@ def create_account(user_id, account_type, initial_deposit=0.0, interest_rate=Non
 
 def get_account_balance(account_id, account_type):
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         if account_type == "loan":
@@ -99,7 +99,7 @@ def get_account_balance(account_id, account_type):
 
 def close_account(account_id, account_type):
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         # Check if account has zero balance

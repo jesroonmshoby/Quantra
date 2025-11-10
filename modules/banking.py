@@ -12,7 +12,7 @@ def deposit(user_id, account_id, amount):
         return False
 
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         # Update account balance
@@ -49,7 +49,7 @@ def withdraw(user_id, account_id, amount):
         return False
 
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         # Check balance

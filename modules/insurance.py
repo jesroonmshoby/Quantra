@@ -22,7 +22,7 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, prem
             'yearly': 12
         }
 
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -76,7 +76,7 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, prem
 
 def get_insurance_details(policy_id):
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -113,7 +113,7 @@ def get_insurance_details(policy_id):
 
 def cancel_insurance_policy(policy_id):
     try:
-        conn = get_db_connection("quantra_db")
+        conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
         cursor.execute("""

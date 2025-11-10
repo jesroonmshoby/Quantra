@@ -6,7 +6,7 @@ logger = Logger()
 def get_notifications(user_id):
     """Retrieve all notifications for a user."""
     try:
-        db = get_db_connection()
+        db, err = get_db_connection()
         cursor = db.cursor(dictionary=True)
         cursor.execute("""
             SELECT id, message, is_read, created_at
@@ -44,7 +44,7 @@ def mark_as_read(user_id, notification_id):
 def send_low_balance_alerts(threshold=1000):
     """Send alerts to users whose account balance falls below the threshold."""
     try:
-        db = get_db_connection()
+        db, err = get_db_connection()
         cursor = db.cursor(dictionary=True)
         cursor.execute("SELECT username, balance FROM accounts WHERE balance < %s", (threshold,))
         low_balance_users = cursor.fetchall()
@@ -59,7 +59,7 @@ def send_low_balance_alerts(threshold=1000):
 def send_loan_due_alerts():
     """Send reminders to users with loan payments due within 3 days."""
     try:
-        db = get_db_connection()
+        db, err = get_db_connection()
         cursor = db.cursor(dictionary=True)
         cursor.execute("""
             SELECT users.username, loans.due_date, loans.amount_due
@@ -80,7 +80,7 @@ def send_loan_due_alerts():
 def send_payment_due_alerts():
     """Send reminders for bills or scheduled payments due within 3 days."""
     try:
-        db = get_db_connection()
+        db, err = get_db_connection()
         cursor = db.cursor(dictionary=True)
         cursor.execute("""
 +            SELECT users.username, scheduled_payments.description, scheduled_payments.due_date, scheduled_payments.amount

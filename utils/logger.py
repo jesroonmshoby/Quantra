@@ -19,7 +19,7 @@ class Logger:
     # User Logs
     def log_action(self, user_id, action):
         try:
-            conn = get_db_connection(self.db_name)
+            conn, err = get_db_connection(self.db_name)
             cursor = conn.cursor()
             cursor.execute(
                 f"INSERT INTO user_logs (user_id, action) VALUES ({user_id}, {action})"
@@ -36,7 +36,7 @@ class Logger:
             return  # skip logs below threshold
 
         try:
-            conn = get_db_connection(self.db_name)
+            conn, err = get_db_connection(self.db_name)
             cursor = conn.cursor()
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -55,7 +55,7 @@ class Logger:
     # Transaction Logs
     def log_transaction(user_id, account_id, amount, transaction_type):
         try:
-            conn = get_db_connection("quantra_db")
+            conn, err = get_db_connection("quantra_db")
             cursor = conn.cursor()
             cursor.execute(
                 """
