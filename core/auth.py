@@ -7,7 +7,7 @@ from security import hash_password, verify_password, is_strong_password, record_
 logger = Logger()
 
 
-def register_user(username: str, password: str):
+def register_user(username: str, email: str, password: str):
     if not validate_username(username):
         print("Invalid username format.")
         logger.warning(f"Invalid username format: {username}")
@@ -29,7 +29,7 @@ def register_user(username: str, password: str):
             return False
 
         hashed_pw = hash_password(password)
-        cursor.execute("INSERT INTO users (username, password) VALUES (%s, %s)", (username, hashed_pw))
+        cursor.execute("INSERT INTO users (username, email, password) VALUES (%s, %s, %s)", (username, email, hashed_pw))
         conn.commit()
 
         print("User registered successfully.")
@@ -46,7 +46,7 @@ def register_user(username: str, password: str):
         conn.close()
 
 
-def login_user(username: str, password: str):
+def login_user(username: str, email: str, password: str):
     try:
         conn = get_db_connection("quantra_db")
         cursor = conn.cursor(dictionary=True)
