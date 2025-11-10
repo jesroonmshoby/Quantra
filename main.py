@@ -189,6 +189,33 @@ def insurance_menu():
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
+def notifications_menu():
+    print("Notifications")
+    user_id = int(input("Enter User ID to view details: ").strip())
+    notification = notifications.get_notifications(user_id)
+    if not notification:
+        print("No notifications available.") 
+    else:
+        print("Your Notifications:")
+        for note in notification:
+            status = "Read" if note['is_read'] else "Unread"
+            print(f"ID: {note['id']} | Message: {note['message']} | Status: {status} | Created At: {note['created_at']}")
+    options = [
+        "Mark Notification as Read",
+    ]
+    for index, item in enumerate(options):
+        print(f"{index + 1}. - {item}")
+
+    while True:
+        try:
+            choice = int(input("Enter your choice (1): ")).strip()
+            if choice.isdigit() and 1 <= choice <= 1:
+                return int(choice)
+            else:
+                print("Invalid choice. Please enter a number between 1.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+
 def main():
 
     # Connect to the database
@@ -237,7 +264,7 @@ def main():
                 new_username = input("Enter new username (leave blank to skip): ").strip()
                 if new_username:
                     updates['username'] = new_username
-                if auth.update_user_info(user_id, updates):
+                if auth.update_user_details(user_id, updates):
                     print("User information updated successfully.")
                 else:
                     print("Failed to update user information.")
@@ -246,7 +273,7 @@ def main():
                 user_id = int(input("Enter User ID to change password: ").strip())
                 old_password = input("Enter old password: ").strip()
                 new_password = input("Enter new password: ").strip()
-                if auth.change_user_password(user_id, old_password, new_password):
+                if auth.change_password(user_id, old_password, new_password):
                     print("Password changed successfully.")
                 else:
                     print("Failed to change password.")
@@ -271,7 +298,7 @@ def main():
 
             elif user_choice == 2:
                 account_id = int(input("Enter user ID to delete: ").strip())
-                if accounts.delete_account(account_id):
+                if accounts.close_account(account_id):
                     print("Account deleted successfully.")
                 else:
                     print("Failed to delete account.")
@@ -301,7 +328,7 @@ def main():
 
             if user_choice == 1:
                 policy_id = int(input("Enter Policy ID to view details: ").strip())
-                details = insurance.get_policy_details(policy_id)
+                details = insurance.get_insurance_details(policy_id)
                 if details:
                     print(details)
                 else:
@@ -312,16 +339,39 @@ def main():
                 policy_data = {}
                 policy_data['type'] = input("Enter policy type: ").strip()
                 policy_data['amount'] = float(input("Enter policy amount: ").strip())
-                if insurance.create_policy(user_id, policy_data):
+                policy_data['duration'] = int(input("Enter policy duration (in years): ").strip())
+                policy_data['coverage_amount'] = float(input("Enter coverage amount: ").strip())
+                policy_data['premium_amount'] = float(input("Enter premium amount: ").strip())
+                if insurance.create_insurance(user_id, policy_data['type'], policy_data['amount'], policy_data['duration'], policy_data['coverage_amount'], policy_data['premium_amount']):
                     print("Policy created successfully.")
                 else:
-                    print("Failed to create policy.")
+                    print("Failed to create policy.")
 
             elif user_choice == 3:
                 policy_id = int(input("Enter Policy ID to cancel: ").strip())
-                if insurance.cancel_policy(policy_id):
+                if insurance.cancel_insurance_policy(policy_id):
                     print("Policy canceled successfully.")
                 else:
                     print("Failed to cancel policy.")
 
         elif choice == 5:
+            user_choice = notifications_menu()
+
+            if user_choice == 1:
+                notification_id = int(input("Enter Notification ID to mark as read: ").strip())
+                if notifications.mark_as_read(notification_id):
+                    print("Notification marked as read.")
+                else:
+                    print("Failed to mark notification as read.")
+
+        elif choice == 6:
+            pass  # Reports functionality can be added here
+
+        elif choice == 7:
+            helpers.clear_screen()
+            print_letter_progress("Exiting application. Goodbye!")
+            break
+
+if __name__ == "__main__":
+    main()
+    
