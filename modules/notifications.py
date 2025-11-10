@@ -83,11 +83,11 @@ def send_payment_due_alerts():
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
         cursor.execute("""
-            SELECT u.username, p.description, p.due_date, p.amount
-            FROM scheduled_payments p
-            JOIN users u ON p.user_id = u.id
-            WHERE p.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
-        """)
++            SELECT users.username, scheduled_payments.description, scheduled_payments.due_date, scheduled_payments.amount
++            FROM scheduled_payments
++            JOIN users ON scheduled_payments.user_id = users.id
++            WHERE scheduled_payments.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
++        """)
         due_payments = cursor.fetchall()
 
         for payment in due_payments:

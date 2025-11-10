@@ -95,7 +95,7 @@ def get_user_choice():
         try:
             menu()
             choice = int(input("Enter your choice (1-11): "))
-            if choice.isdigit() and 1 <= choice <= 11:
+            if 1 <= choice <= 11:
                 return int(choice)
             else:
                 print("Invalid choice. Please enter a number between 1 and 11.")
@@ -124,7 +124,7 @@ def user_management_menu():
     while True:
         try:
             choice = int(input("Enter your choice (1-3): "))
-            if choice.isdigit() and 1 <= choice <= 3:
+            if 1 <= choice <= 3:
                 return int(choice)
             else:
                 print("Invalid choice. Please enter a number between 1 and 3.")
@@ -143,7 +143,7 @@ def accounts_management_menu():
     while True:
         try:
             choice = int(input("Enter your choice (1-2): ")).strip()
-            if choice.isdigit() and 1 <= choice <= 2:
+            if 1 <= choice <= 2:
                 return int(choice)
             else:
                 print("Invalid choice. Please enter a number between 1 and 2.")
@@ -162,7 +162,7 @@ def banking_management_menu():
     while True:
         try:
             choice = int(input("Enter your choice (1-2): "))
-            if choice.isdigit() and 1 <= choice <= 2:
+            if 1 <= choice <= 2:
                 return int(choice)
             else:
                 print("Invalid choice. Please enter a number between 1 and 3.")
@@ -181,8 +181,8 @@ def insurance_menu():
 
     while True:
         try:
-            choice = int(input("Enter your choice (1-3): ")).strip()
-            if choice.isdigit() and 1 <= choice <= 3:
+            choice = int(input("Enter your choice (1-3): ").strip())
+            if 1 <= choice <= 3:
                 return int(choice)
             else:
                 print("Invalid choice. Please enter a number between 1 and 3.")
@@ -208,11 +208,11 @@ def notifications_menu():
 
     while True:
         try:
-            choice = int(input("Enter your choice (1): ")).strip()
-            if choice.isdigit() and 1 <= choice <= 1:
+            choice = int(input("Enter your choice (1): ").strip())
+            if 1 <= choice <= 1:
                 return int(choice)
             else:
-                print("Invalid choice. Please enter a number between 1.")
+                print("Invalid choice. Please enter 1.")
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
@@ -372,6 +372,11 @@ def main():
             print_letter_progress("Exiting application. Goodbye!")
             break
 
+        else:
+            print("Invalid choice. Please try again.")
+
+        # Run Scheduler in Background
+        scheduler.run_daily_tasks()
+
 if __name__ == "__main__":
     main()
-    
