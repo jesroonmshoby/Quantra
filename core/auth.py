@@ -29,7 +29,7 @@ def register_user(username: str, email: str, password: str):
             return False
 
         hashed_pw = hash_password(password)
-        cursor.execute("INSERT INTO users (username, email, password) VALUES (%s, %s, %s)", (username, email, hashed_pw))
+        cursor.execute("INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)", (username, email, hashed_pw))
         conn.commit()
 
         print("User registered successfully.")
@@ -46,7 +46,7 @@ def register_user(username: str, email: str, password: str):
         conn.close()
 
 
-def login_user(username: str, email: str, password: str):
+def login_user(username: str, email: str):
     try:
         conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor(dictionary=True)
@@ -63,16 +63,26 @@ def login_user(username: str, email: str, password: str):
             logger.warning(f"Login attempt on locked account: {username}")
             return False
 
-        if verify_password(password, user["password"]):
-            print("Login successful!")
-            logger.info(f"User logged in: {username}")
-            reset_attempts(username)
-            return True
-        else:
-            print("Incorrect password.")
-            logger.warning(f"Incorrect password for {username}")
-            record_failed_attempt(username)
-            return False
+        max_login_attempts = 3
+        # Allow up to 3 password attempts
+        for attempt in range(1, max_login_attempts + 1):
+            password = input(f"Enter password (Attempt {attempt}/{max_login_attempts}): ")
+            
+            if verify_password(password, user["password_hash"]):
+                logger.info(f"User logged in: {username}")
+                reset_attempts(username)
+                print("Login successful!")
+                return True
+            else:
+                remaining = max_login_attempts - attempt
+                if remaining > 0:
+                    print(f"Incorrect password. {remaining} attempt(s) remaining.")
+                    logger.warning(f"Incorrect password for {username} - Attempt {attempt}")
+                else:
+                    print("Incorrect password.")
+                    logger.warning(f"Incorrect password for {username} - Final attempt")
+                    record_failed_attempt(username)
+                    return False
 
     except mysql.Error as err:
         print("Database error during login.")
@@ -83,7 +93,6 @@ def login_user(username: str, email: str, password: str):
         cursor.close()
         conn.close()
 
-
 def logout_user(username: str):
     logger.info(f"User logged out: {username}")
     print(f"{username} has logged out successfully.")
@@ -91,40 +100,32 @@ def logout_user(username: str):
 def get_user_details(user_id):
     try:
         conn, err = get_db_connection("quantra_db")
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         
-        cursor.execute(f"""
+        cursor.execute("""
             SELECT username, email, role, created_at 
             FROM users 
-            WHERE id = {user_id}
-        """)
+            WHERE id = %s
+        """, (user_id,))
         
-        user_info = cursor.fetchone()
-        if not user_info:
+        user_info = cursor.fetchall()
+        if len(user_info) == 0:
             logger.error(f"User ID {user_id} not found")
             return None
             
         # Get all accounts associated with user
-        cursor.execute(f"""
+        cursor.execute("""
             SELECT id, account_type, created_at 
             FROM accounts 
-            WHERE user_id = {user_id}
-        """)
+            WHERE user_id = %s
+        """, (user_id,))
         
         accounts = cursor.fetchall()
-        
-        user_details = {
-            "user_info": {
-                "username": user_info[0],
-                "email": user_info[1],
-                "role": user_info[2],
-                "joined": user_info[3]
-            },
-            "accounts": accounts
-        }
-        
-        return user_details
-        
+
+        print(f"USER: {user_info['username']} | {user_info['email']} | {user_info['role']} | Joined: {user_info['created_at']} | Accounts: {accounts}")
+
+        return user_info, accounts
+
     except Exception as e:
         logger.error(f"Failed to get user details: {e}")
         return None

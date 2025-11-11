@@ -39,13 +39,14 @@ class Logger:
             conn, err = get_db_connection(self.db_name)
             cursor = conn.cursor()
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
             cursor.execute(
-                f"""
-                INSERT INTO system_logs (level, message, context, created_at)
-                VALUES ({level}, {message}, {context}, {timestamp})
                 """
+                INSERT INTO system_logs (level, message, context, created_at)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (level, message, context, timestamp)
             )
+            
             conn.commit()
             cursor.close()
             conn.close()

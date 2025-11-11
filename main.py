@@ -1,3 +1,9 @@
+import sys
+import os
+# Add the parent directory (QUANTRA/) to sys.path
+sys.path.append(os.path.dirname(os.path.abspath(r"C:\Users\hp\Documents\GitHub\Quantra")))
+from config.db_config import get_db_connection
+# ... rest of your main.py code
 import mysql.connector as mysql
 from config.db_config import get_db_connection
 from modules import accounts, banking, insurance, loans, notifications
@@ -37,9 +43,8 @@ def print_letter_progress(word):
 def login():
     username = input("Enter your username: ").strip()
     email = input("Enter your email: ").strip()
-    password = input("Enter your password: ").strip()
 
-    if auth.login_user(username, email, password):
+    if auth.login_user(username, email):
         print("Login successful!")
         return True
     else:
@@ -77,7 +82,7 @@ def authorize():
             print("Invalid choice. Please enter 1 or 2.")
 
 def menu():
-    print("Home Menu:")
+    print("\nHome Menu:")
     options = [
         "User Management",
         "Accounts",
@@ -94,11 +99,11 @@ def get_user_choice():
     while True:
         try:
             menu()
-            choice = int(input("Enter your choice (1-11): "))
-            if 1 <= choice <= 11:
+            choice = int(input("Enter your choice (1-7): "))
+            if 1 <= choice <= 7:
                 return int(choice)
             else:
-                print("Invalid choice. Please enter a number between 1 and 11.")
+                print("Invalid choice. Please enter a number between 1 and 7.")
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
@@ -239,12 +244,15 @@ def main():
     if not authorize():
         print("Authorization failed. Exiting application.")
         return
+    
+    helpers.clear_screen()
 
     # Main Loop
     while True:
         choice = get_user_choice()
 
         if choice == 1:
+            helpers.clear_screen()
             user_choice = user_management_menu()
 
             if user_choice == 1:
@@ -279,6 +287,7 @@ def main():
                     print("Failed to change password.")
 
         elif choice == 2:
+            helpers.clear_screen()
             user_choice = accounts_management_menu()
 
             if user_choice == 1:
@@ -303,9 +312,8 @@ def main():
                 else:
                     print("Failed to delete account.")
 
-
-
         elif choice == 3:
+            helpers.clear_screen()
             user_choice = banking_management_menu()
             user_id = int(input("Enter User ID: ").strip())
             account_id = int(input("Enter Account ID: ").strip())
@@ -324,6 +332,7 @@ def main():
                     print("Withdrawal failed.")
 
         elif choice == 4:
+            helpers.clear_screen()
             user_choice = insurance_menu()
 
             if user_choice == 1:
@@ -355,6 +364,7 @@ def main():
                     print("Failed to cancel policy.")
 
         elif choice == 5:
+            helpers.clear_screen()
             user_choice = notifications_menu()
 
             if user_choice == 1:
@@ -365,6 +375,7 @@ def main():
                     print("Failed to mark notification as read.")
 
         elif choice == 6:
+            helpers.clear_screen()
             pass  # Reports functionality can be added here
 
         elif choice == 7:

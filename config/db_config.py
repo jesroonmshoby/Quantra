@@ -2,7 +2,7 @@ import mysql.connector as mysql
 
 DB_HOST = "localhost"                  
 DB_USER = "root"
-DB_PASSWORD = "Akshay@2008"
+DB_PASSWORD = "jesujeze0127"
 
 def get_db_connection(db_name = None):
     try:
