@@ -50,7 +50,7 @@ def login_user(username: str, email: str):
     try:
         conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+        cursor.execute("SELECT * FROM users WHERE username = %s and email = %s", (username, email))
         user = cursor.fetchone()
 
         if not user:
@@ -71,7 +71,6 @@ def login_user(username: str, email: str):
             if verify_password(password, user["password_hash"]):
                 logger.info(f"User logged in: {username}")
                 reset_attempts(username)
-                print("Login successful!")
                 return True
             else:
                 remaining = max_login_attempts - attempt
@@ -108,11 +107,12 @@ def get_user_details(user_id):
             WHERE id = %s
         """, (user_id,))
         
-        user_info = cursor.fetchall()
+        user_info = cursor.fetchone()
         if len(user_info) == 0:
             logger.error(f"User ID {user_id} not found")
-            return None
-            
+            return None, None
+        
+        
         # Get all accounts associated with user
         cursor.execute("""
             SELECT id, account_type, created_at 
@@ -122,9 +122,14 @@ def get_user_details(user_id):
         
         accounts = cursor.fetchall()
 
-        print(f"USER: {user_info['username']} | {user_info['email']} | {user_info['role']} | Joined: {user_info['created_at']} | Accounts: {accounts}")
+        if accounts:
+            return user_info, accounts
 
-        return user_info, accounts
+                
+        else:
+            logger.warning(f"No accounts found for user ID {user_id}")
+            return user_info, None
+
 
     except Exception as e:
         logger.error(f"Failed to get user details: {e}")
@@ -171,12 +176,13 @@ def update_user_details(user_id, updates):
 def change_password(user_id, old_password, new_password):
     # Change user password with verification.
     try:
-        if not is_strong_password(new_password):
-            logger.error("New password does not meet strength requirements")
-            return False
-            
         conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
+
+        if not is_strong_password(new_password):
+            logger.error("New password does not meet strength requirements")
+            print("New password does not meet strength requirements")
+            return False
         
         cursor.execute("""
             SELECT password_hash 
@@ -191,6 +197,7 @@ def change_password(user_id, old_password, new_password):
             
         if not verify_password(old_password, result[0]):
             logger.error("Current password is incorrect")
+            print("Current password is incorrect")
             return False
             
         new_hash = hash_password(new_password)

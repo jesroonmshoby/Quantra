@@ -54,7 +54,7 @@ class Logger:
             print(f"Failed to log system event: {err}")
 
     # Transaction Logs
-    def log_transaction(user_id, account_id, amount, transaction_type):
+    def log_transaction(self, user_id, account_id, amount, transaction_type):
         try:
             conn, err = get_db_connection("quantra_db")
             cursor = conn.cursor()

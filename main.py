@@ -3,7 +3,8 @@ import os
 # Add the parent directory (QUANTRA/) to sys.path
 sys.path.append(os.path.dirname(os.path.abspath(r"C:\Users\hp\Documents\GitHub\Quantra")))
 from config.db_config import get_db_connection
-# ... rest of your main.py code
+
+
 import mysql.connector as mysql
 from config.db_config import get_db_connection
 from modules import accounts, banking, insurance, loans, notifications
@@ -34,7 +35,7 @@ def print_letter_progress(word):
     for index, correct_char in enumerate(word):
         for c in string.printable:  # or use any set of characters you want
             print(guessed + c, end='\r', flush=True)
-            time.sleep(0.006)  # Adjust speed here
+            time.sleep(0.0035)  # Adjust speed here
             if c == correct_char:
                 guessed += c
                 break
@@ -78,6 +79,7 @@ def authorize():
             if not register():
                 return False
             login()
+            return True
         else:
             print("Invalid choice. Please enter 1 or 2.")
 
@@ -147,7 +149,7 @@ def accounts_management_menu():
 
     while True:
         try:
-            choice = int(input("Enter your choice (1-2): ")).strip()
+            choice = int(input("Enter your choice (1-2): ").strip())
             if 1 <= choice <= 2:
                 return int(choice)
             else:
@@ -239,12 +241,14 @@ def main():
     display_loading_screen()
 
     print_letter_progress("Quantra Banking System")
+    time.sleep(1)
 
     # Authorize user
     if not authorize():
         print("Authorization failed. Exiting application.")
         return
     
+    time.sleep(1)
     helpers.clear_screen()
 
     # Main Loop
@@ -257,10 +261,35 @@ def main():
 
             if user_choice == 1:
                 user_id = int(input("Enter User ID to view details: "))
-                details = auth.get_user_details(user_id)
-                if details:
-                    print(details)
-                else:
+                user_info, account_details = auth.get_user_details(user_id)
+
+                if account_details:
+
+                    # Print User Summary
+                    print("\nUser Summary:")
+                    print(f" Username: {user_info['username']}")
+                    print(f" Email: {user_info['email']}")
+                    print(f" Role: {user_info['role']}")
+                    print(f" Joined: {user_info['created_at']}\n")
+
+                    # Print Account Details
+                    print("\nAccount Details:")
+                    for acc in account_details:
+                        print(f"  - Account ID: {acc['id']}")
+                        print(f"  - Account Type: {acc['account_type']}")
+                        print(f"  - Created At: {acc['created_at']}\n")
+
+                elif account_details is None:
+                    # Print User Summary
+                    print("\nUser Summary:")
+                    print(f" Username: {user_info['username']}")
+                    print(f" Email: {user_info['email']}")
+                    print(f" Role: {user_info['role']}")
+                    print(f" Joined: {user_info['created_at']}\n")
+
+                    print("No Accounts found for this user.")
+
+                elif user_info is None:
                     print("User not found.")
 
             elif user_choice == 2:
@@ -292,22 +321,37 @@ def main():
 
             if user_choice == 1:
                 account_data = {}
-                account_data['account_type'] = input("Enter Account Type: ").strip()
+                user_id = int(input("Enter User ID: ").strip())
+                account_data['account_type'] = input("Enter Account Type: ").strip().lower()
 
-                if account_data['account_type']=='savings' or account_data['account_type']=='checking':
+                if account_data['account_type']=='savings' or account_data['account_type']=='current':
                     account_data['initial_deposit'] = float(input("Enter Initial Deposit: ").strip())
-                    if accounts.create_account(account_data):
+                    if account_data["account_type"] == "savings":
+                        account_data['interest_rate'] = float(input("Enter Interest Rate (as percentage): ").strip())
+                    if accounts.create_account(user_id, account_data['account_type'], account_data['initial_deposit'], interest_rate= (account_data.get('interest_rate') if account_data['account_type']=='savings' else None)):
                         print("Account created successfully.")
                     else:
-                        print("Failed to create account.")
+                        print(f"Failed to create {account_data['account_type']} account.")
+
                 elif account_data['account_type']=='loan':
-                    loans.apply_for_loan()
+
+                    account_data['initial_deposit'] = float(input("Enter Loan Amount: ").strip())
+                    account_data['interest_rate'] = float(input("Enter Interest Rate (as percentage): ").strip())
+                    account_data['due_date'] = input("Enter Due Date (YYYY-MM-DD): ").strip()
+
+                    if loans.apply_for_loan(user_id, account_data['initial_deposit'], account_data['interest_rate'], account_data['due_date']):
+                        print("Loan account created successfully.")
+
+                    else:
+                        print("Failed to create loan account.")
+                    
                 else:
-                    print("Invalid account type. Please choose 'savings', 'checking', or 'loan'.")
+                    print("Invalid account type. Please choose 'savings', 'current', or 'loan'.")
 
             elif user_choice == 2:
-                account_id = int(input("Enter user ID to delete: ").strip())
-                if accounts.close_account(account_id):
+                account_id = int(input("Enter Account ID to delete: ").strip())
+                account_type = input("Enter Account Type (savings/current/loan): ").strip().lower()
+                if accounts.close_account(account_id, account_type):
                     print("Account deleted successfully.")
                 else:
                     print("Failed to delete account.")
