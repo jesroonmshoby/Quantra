@@ -1,4 +1,4 @@
-from config.db_config import get_db_connection  # Already handles connection
+from config.db_config import get_db_connection  
 
 
 # -------------------- ACCOUNT STATEMENT REPORT --------------------
