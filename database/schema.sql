@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS user_logs (
     user_id INT NOT NULL,
     action VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    is_read BOOLEAN DEFAULT FALSE
 );
 
 # Table -> system_logs
