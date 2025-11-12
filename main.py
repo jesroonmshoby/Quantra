@@ -82,9 +82,8 @@ def authorize():
         elif choice == '2':
             if not register():
                 return False
-            user_id = login()
-            logger.log_action(user_id, f"[welcome] Welcome to Quantra Banking! Your account is now active")
-            return user_id
+            login()
+            return True
         else:
             print("Invalid choice. Please enter 1 or 2.")
 
@@ -197,8 +196,10 @@ def insurance_menu():
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
-def notifications_menu(user_id):
+def notifications_menu():
     print("\nNOTIFICATIONS:")
+
+    user_id = int(input("Enter User ID to view notifications: ").strip())
     notification = notifications.get_notifications(user_id)
     
     if not notification:
@@ -217,9 +218,9 @@ def notifications_menu(user_id):
         try:
             choice = int(input("Enter your choice (0-1): ").strip())
             if choice == 0:
-                return 0
+                return user_id, 0
             elif choice == 1:
-                return 1  # Return user_id with choice
+                return user_id, 1  # Return user_id with choice
             else:
                 print("Invalid choice. Please enter 0 or 1.")
         except ValueError:
@@ -485,7 +486,7 @@ def main():
 
         elif choice == 5:
             helpers.clear_screen()
-            user_choice = notifications_menu(user_id)  # Unpack both values
+            user_id, user_choice = notifications_menu()  # Unpack both values
             
             if user_choice == 1:
                 notification_id = int(input("\nEnter Notification ID to mark as read: ").strip())
