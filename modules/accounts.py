@@ -110,6 +110,12 @@ def close_account(account_id, account_type):
         if balance and balance != 0:
             logger.error(f"Cannot close account {account_id}: Balance must be zero")
             return False
+        
+        # Delete Nessecary Records from Transaction Table
+        cursor.execute("""
+            DELETE FROM transactions 
+            WHERE account_id = %s
+        """, (account_id,))
 
         # Deletes Account
         cursor.execute("""

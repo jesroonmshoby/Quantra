@@ -62,6 +62,7 @@ def register():
 
     if auth.register_user(username, email, password):
         print("Registration successful! You can now log in.")
+        logger.log_action(None, f"Welcome new user: {username}")
         return True
     else:
         print("Registration failed. Please try again.")
@@ -202,7 +203,7 @@ def notifications_menu(user_id):
     
     if not notification:
         print("No notifications available.")
-        return None, None  # Return both user_id and choice
+        return None
     
     print("\nYour Notifications:")
     for note in notification:
@@ -218,7 +219,7 @@ def notifications_menu(user_id):
             if choice == 0:
                 return 0
             elif choice == 1:
-                return 1  # Return user_id with choice
+                return 1  
             else:
                 print("Invalid choice. Please enter 0 or 1.")
         except ValueError:
@@ -484,14 +485,24 @@ def main():
 
         elif choice == 5:
             helpers.clear_screen()
-            user_choice = notifications_menu(user_id)  # Unpack both values
-            
-            if user_choice == 1:
-                notification_id = int(input("\nEnter Notification ID to mark as read: ").strip())
-                if notifications.mark_as_read(notification_id, user_id):  # Pass user_id
-                    print("✓ Notification marked as read.")
-                else:
-                    print("✗ Failed to mark notification as read.")
+            while True:
+                user_choice = notifications_menu(user_id)  # Unpack both values
+                
+                if user_choice == 1:
+                    notification_id = int(input("\nEnter Notification ID to mark as read: ").strip())
+                    if notifications.mark_as_read(notification_id, user_id):  # Pass user_id
+                        print("✓ Notification marked as read.")
+                    else:
+                        print("✗ Failed to mark notification as read.")
+
+                elif user_choice == 0:
+                    helpers.clear_screen()
+                    break  # Back to main menu
+
+                elif user_choice is None:
+                    time.sleep(1.5)
+                    helpers.clear_screen()
+                    break  # No notifications, back to main menu
 
         elif choice == 6:
             helpers.clear_screen()
