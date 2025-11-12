@@ -74,8 +74,9 @@ def authorize():
         choice = input("Enter your choice (1 or 2): ").strip()
 
         if choice == '1':
-            if login():
-                return True
+            user_id = login()
+            if user_id:
+                return user_id
             else:
                 return False
         elif choice == '2':
@@ -112,32 +113,24 @@ def get_user_choice():
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
-def account_menu():
-    print("Account Menu:")
-    options = [
-        "Create Account",
-        "Delete Account"
-    ]
-    for index, item in enumerate(options):
-        print(f"{index + 1}. - {item}")
-
 def user_management_menu():
     print("User Management Menu:")
     options = [
         "View User Details",
         "Update User Information",
         "Change User Password",
+        "Exit to Main Menu"
     ]
     for index, item in enumerate(options):
         print(f"{index + 1}. - {item}")
 
     while True:
         try:
-            choice = int(input("Enter your choice (1-3): "))
-            if 1 <= choice <= 3:
+            choice = int(input("Enter your choice (1-4): "))
+            if 1 <= choice <= 4:
                 return int(choice)
             else:
-                print("Invalid choice. Please enter a number between 1 and 3.")
+                print("Invalid choice. Please enter a number between 1 and 4.")
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
@@ -146,45 +139,7 @@ def accounts_management_menu():
     options = [
         "Create Account",
         "Delete Account",
-    ]
-    for index, item in enumerate(options):
-        print(f"{index + 1}. - {item}")
-
-    while True:
-        try:
-            choice = int(input("Enter your choice (1-2): ").strip())
-            if 1 <= choice <= 2:
-                return int(choice)
-            else:
-                print("Invalid choice. Please enter a number between 1 and 2.")
-        except ValueError:
-            print("Invalid input. Please enter a valid number.")
-
-def banking_management_menu():
-    print("Banking Management Menu:")
-    options = [
-        "Deposit",
-        "Withdraw",
-    ]
-    for index, item in enumerate(options):
-        print(f"{index + 1}. - {item}")
-
-    while True:
-        try:
-            choice = int(input("Enter your choice (1-2): "))
-            if 1 <= choice <= 2:
-                return int(choice)
-            else:
-                print("Invalid choice. Please enter a number between 1 and 3.")
-        except ValueError:
-            print("Invalid input. Please enter a valid number.")
-
-def insurance_menu():
-    print("Insurance Menu:")
-    options = [
-        "View Insurance Details",
-        "Create Insurance Policy",
-        "Cancel Insurance Policy",
+        "Exit to Main Menu"
     ]
     for index, item in enumerate(options):
         print(f"{index + 1}. - {item}")
@@ -196,6 +151,48 @@ def insurance_menu():
                 return int(choice)
             else:
                 print("Invalid choice. Please enter a number between 1 and 3.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+
+def banking_management_menu():
+    print("Banking Management Menu:")
+    options = [
+        "Deposit",
+        "Withdraw",
+        "Transfer",
+        "Exit to Main Menu"
+    ]
+    for index, item in enumerate(options):
+        print(f"{index + 1}. - {item}")
+
+    while True:
+        try:
+            choice = int(input("Enter your choice (1-4): "))
+            if 1 <= choice <= 4:
+                return int(choice)
+            else:
+                print("Invalid choice. Please enter a number between 1 and 4.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+
+def insurance_menu():
+    print("Insurance Menu:")
+    options = [
+        "View Insurance Details",
+        "Create Insurance Policy",
+        "Cancel Insurance Policy",
+        "Exit to Main Menu"
+    ]
+    for index, item in enumerate(options):
+        print(f"{index + 1}. - {item}")
+
+    while True:
+        try:
+            choice = int(input("Enter your choice (1-4): ").strip())
+            if 1 <= choice <= 4:
+                return int(choice)
+            else:
+                print("Invalid choice. Please enter a number between 1 and 4.")
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
@@ -351,6 +348,10 @@ def main():
                     logger.log_action(user_id, "Changed user password")
                 else:
                     print("Failed to change password.")
+            
+            elif user_choice == 4:
+                helpers.clear_screen()
+                continue  # Exit to main menu
 
         elif choice == 2:
             helpers.clear_screen()
@@ -395,14 +396,18 @@ def main():
                 else:
                     print("Failed to delete account.")
 
+            elif user_choice == 3:
+                helpers.clear_screen()
+                continue  # Exit to main menu
+
         elif choice == 3:
             helpers.clear_screen()
             user_choice = banking_management_menu()
-            account_id = int(input("Enter Account ID: ").strip())
-            amount = float(input("Enter amount: ").strip())
-            account_type = input("Enter Account Type (savings/current): ").strip().lower()
 
             if user_choice == 1:
+                account_id = int(input("Enter Account ID: ").strip())
+                amount = float(input("Enter amount: ").strip())
+
                 if banking.deposit(user_id, account_id, amount):
                     print("Deposit successful.")
                     logger.log_action(user_id, f"Deposited {amount} into account {account_id}")
@@ -410,11 +415,28 @@ def main():
                     print("Deposit failed.")
 
             elif user_choice == 2:
+                account_id = int(input("Enter Account ID: ").strip())
+                amount = float(input("Enter amount: ").strip())
+                account_type = input("Enter Account Type (savings/current): ").strip().lower()
                 if banking.withdraw(user_id, account_id, amount, account_type):
                     print("Withdrawal successful.")
                     logger.log_action(user_id, f"Withdrew {amount} from account {account_id}")
                 else:
                     print("Withdrawal failed.")
+
+            elif user_choice == 3:
+                account_id = int(input("Enter Source Account ID: ").strip())
+                target_account_id = int(input("Enter Target Account ID: ").strip())
+                amount = float(input("Enter amount: ").strip())
+                if banking.process_immediate_transfer(user_id, account_id, target_account_id, amount):
+                    print("Transfer successful.")
+                    logger.log_action(user_id, f"Transferred {amount} from account {account_id} to account {target_account_id}")
+                else:
+                    print("Transfer failed.")
+
+            elif user_choice == 4:
+                helpers.clear_screen()
+                continue  # Exit to main menu
 
         elif choice == 4:
             helpers.clear_screen()
@@ -458,6 +480,10 @@ def main():
                 else:
                     print("Failed to cancel policy.")
 
+            elif user_choice == 4:
+                helpers.clear_screen()
+                continue  # Exit to main menu
+
         elif choice == 5:
             helpers.clear_screen()
             user_id, user_choice = notifications_menu()  # Unpack both values
@@ -468,6 +494,8 @@ def main():
                     print("✓ Notification marked as read.")
                 else:
                     print("✗ Failed to mark notification as read.")
+
+                
 
         elif choice == 6:
             helpers.clear_screen()

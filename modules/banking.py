@@ -1,6 +1,7 @@
 from config.db_config import get_db_connection
 from utils.logger import Logger
 import utils.validators as validators 
+from utils.helpers import format_currency
 
 logger = Logger()
 
@@ -118,3 +119,82 @@ def withdraw(user_id, account_id, amount, account_type):
     finally:
         cursor.close()
         conn.close()
+
+def process_immediate_transfer(user_id, from_account_id, to_account_id, amount):
+    try:
+        conn, err = get_db_connection("quantra_db")
+        cursor = conn.cursor()
+
+        # Verify ownership of from_account_id
+        cursor.execute(
+            f"SELECT id FROM accounts WHERE id = {from_account_id} AND user_id = {user_id}",
+        )
+        if not cursor.fetchone():
+            logger.error(
+                f"Transfer failed: User {user_id} does not own Account #{from_account_id}",
+                context="banking:process_immediate_transfer"
+            )
+            return False
+        
+        # Verify Account isnt Loan Account For Both Accounts
+        cursor.execute(
+            f"SELECT account_type FROM accounts WHERE id = {from_account_id}",
+        )
+        account_type = cursor.fetchone()[0]
+        if account_type == "loan":
+            logger.error(
+                f"Transfer failed: Cannot transfer from Loan Account #{from_account_id}",
+                context="banking:process_immediate_transfer"
+            )
+            return False
+        
+        cursor.execute(
+            f"SELECT account_type FROM accounts WHERE id = {to_account_id}",
+        )
+        account_type = cursor.fetchone()[0]
+        if account_type == "loan":
+            logger.error(
+                f"Transfer failed: Cannot transfer to Loan Account #{to_account_id}",
+                context="banking:process_immediate_transfer"
+            )
+            return False
+        
+
+
+        # Check sufficient funds
+        cursor.execute(
+            f"SELECT balance FROM current_accounts WHERE account_id = {from_account_id}",
+        )
+        balance = cursor.fetchone()[0]
+
+        if balance < amount:
+            logger.warning(
+                f"Insufficient funds in Account #{from_account_id}",
+                context="banking:process_immediate_transfer"
+            )
+            return False
+
+        # Process transfer
+        cursor.execute(
+            f"UPDATE current_accounts SET balance = balance - {amount} WHERE account_id = {from_account_id}",
+        )
+        cursor.execute(
+            f"UPDATE current_accounts SET balance = balance + {amount} WHERE account_id = {to_account_id}",
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        logger.info(
+            f"Transferred {format_currency(amount)} from Account #{from_account_id} to #{to_account_id}",
+            context="banking:process_immediate_transfer"
+        )
+        return True
+
+    except Exception as err:
+        logger.error(
+            f"Transfer failed: {err}",
+            context="banking:process_immediate_transfer"
+        )
+        return False
