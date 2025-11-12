@@ -52,6 +52,7 @@ def login_user(username: str, email: str):
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM users WHERE username = %s and email = %s", (username, email))
         user = cursor.fetchone()
+        user_id = user["id"] if user else None
 
         if not user:
             print("User not found.")
@@ -71,7 +72,8 @@ def login_user(username: str, email: str):
             if verify_password(password, user["password_hash"]):
                 logger.info(f"User logged in: {username}")
                 reset_attempts(username)
-                return True
+                return user_id  # Return user_id on successful login
+            
             else:
                 remaining = max_login_attempts - attempt
                 if remaining > 0:

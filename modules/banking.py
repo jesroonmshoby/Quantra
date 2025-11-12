@@ -49,7 +49,7 @@ def deposit(user_id, account_id, amount):
 
 
 # Withdraw function
-def withdraw(user_id, account_id, amount):
+def withdraw(user_id, account_id, amount, account_type):
     if not validators.validate_amount(amount):
         logger.error(f"Withdrawal failed for user {user_id}: Invalid amount {amount}")
         return False
@@ -58,14 +58,30 @@ def withdraw(user_id, account_id, amount):
         conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
 
-        # check if current account exists
-        cursor.execute("SELECT id FROM accounts WHERE id = %s AND user_id = %s", (account_id, user_id))
-        if not cursor.fetchone():
-            logger.error(f"Deposit failed for user {user_id}: Account not found")
-            return False
+        # check if account exists
+        if account_type in ["savings", "current"]:
+            cursor.execute("SELECT id FROM accounts WHERE id = %s AND user_id = %s", (account_id, user_id))
+            if not cursor.fetchone():
+                logger.error(f"Deposit failed for user {user_id}: Account not found")
+                return False
+            
+        else:
+            # Check if account type is valid
+            if account_type not in ["savings", "current", "loan"]:
+                logger.error(f"Withdrawal failed for user {user_id}: Invalid account type {account_type}")
+                return False
+            
+            else:
+                print("Withdrawals can only be made from savings or current accounts.")
+                logger.error(f"Withdrawal failed for user {user_id}: Invalid account type {account_type}")
+                return False
+            
 
         # Check balance
-        cursor.execute("SELECT balance FROM current_accounts WHERE account_id = %s", (account_id, ))
+        if account_type == "savings":
+            cursor.execute("SELECT balance FROM savings_accounts WHERE account_id = %s", (account_id,))
+        elif account_type == "current":
+            cursor.execute("SELECT balance FROM current_accounts WHERE account_id = %s", (account_id,))
         result = cursor.fetchone()
         if not result:
             logger.error(f"Withdrawal failed for user {user_id}: Account not found")
@@ -77,10 +93,16 @@ def withdraw(user_id, account_id, amount):
             return False
 
         # Deduct balance
-        cursor.execute(
-            "UPDATE current_accounts SET balance = balance - %s WHERE account_id = %s",
-            (amount, account_id)
-        )
+        if account_type == "savings":
+            cursor.execute(
+                "UPDATE savings_accounts SET balance = balance - %s WHERE account_id = %s",
+                (amount, account_id)
+            )
+        elif account_type == "current":
+            cursor.execute(
+                "UPDATE current_accounts SET balance = balance - %s WHERE account_id = %s",
+                (amount, account_id)
+            )
         conn.commit()
 
         # Log transaction

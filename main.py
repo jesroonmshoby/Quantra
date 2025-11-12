@@ -46,9 +46,11 @@ def login():
     username = input("Enter your username: ").strip()
     email = input("Enter your email: ").strip()
 
-    if auth.login_user(username, email):
+    # Call the login_user function and capture the returned user_id
+    user_id = auth.login_user(username, email)
+    if user_id:
         print("Login successful!")
-        return True
+        return user_id
     else:
         print("Login failed. Please check your credentials.")
         return False
@@ -245,15 +247,17 @@ def main():
     display_loading_screen()
 
     print_letter_progress("Quantra Banking System")
-    time.sleep(1)
+    time.sleep(0.6)
 
     # Authorize user
-    if not authorize():
+    user_id = authorize()
+    if not user_id:
         print("Authorization failed. Exiting application.")
         return
     
     time.sleep(1)
     helpers.clear_screen()
+    
 
     # Main Loop
     while True:
@@ -265,7 +269,6 @@ def main():
 
 
             if user_choice == 1:
-                user_id = int(input("Enter User ID to view details: "))
                 user_info, account_details, insurance_details = auth.get_user_details(user_id)
 
                 if account_details and insurance_details:
@@ -327,7 +330,6 @@ def main():
                     print("User not found.")
 
             elif user_choice == 2:
-                user_id = int(input("Enter User ID to update: ").strip())
                 updates = {}
                 new_email = input("Enter new email (leave blank to skip): ").strip()
                 if new_email:
@@ -337,15 +339,16 @@ def main():
                     updates['username'] = new_username
                 if auth.update_user_details(user_id, updates):
                     print("User information updated successfully.")
+                    logger.log_action(user_id, "Updated user information")
                 else:
                     print("Failed to update user information.")
 
             elif user_choice == 3:
-                user_id = int(input("Enter User ID to change password: ").strip())
                 old_password = input("Enter old password: ").strip()
                 new_password = input("Enter new password: ").strip()
                 if auth.change_password(user_id, old_password, new_password):
                     print("Password changed successfully.")
+                    logger.log_action(user_id, "Changed user password")
                 else:
                     print("Failed to change password.")
 
@@ -355,7 +358,6 @@ def main():
 
             if user_choice == 1:
                 account_data = {}
-                user_id = int(input("Enter User ID: ").strip())
                 account_data['account_type'] = input("Enter Account Type: ").strip().lower()
 
                 if account_data['account_type']=='savings' or account_data['account_type']=='current':
@@ -364,6 +366,7 @@ def main():
                         account_data['interest_rate'] = float(input("Enter Interest Rate (as percentage): ").strip())
                     if accounts.create_account(user_id, account_data['account_type'], account_data['initial_deposit'], interest_rate= (account_data.get('interest_rate') if account_data['account_type']=='savings' else None)):
                         print("Account created successfully.")
+                        logger.log_action(user_id, f"Created {account_data['account_type']} account")
                     else:
                         print(f"Failed to create {account_data['account_type']} account.")
 
@@ -375,6 +378,7 @@ def main():
 
                     if loans.apply_for_loan(user_id, account_data['initial_deposit'], account_data['interest_rate'], account_data['due_date']):
                         print("Loan account created successfully.")
+                        logger.log_action(user_id, "Loan account created")
 
                     else:
                         print("Failed to create loan account.")
@@ -387,25 +391,28 @@ def main():
                 account_type = input("Enter Account Type (savings/current/loan): ").strip().lower()
                 if accounts.close_account(account_id, account_type):
                     print("Account deleted successfully.")
+                    logger.log_action(user_id, f"Deleted {account_type} account with ID {account_id}")
                 else:
                     print("Failed to delete account.")
 
         elif choice == 3:
             helpers.clear_screen()
             user_choice = banking_management_menu()
-            user_id = int(input("Enter User ID: ").strip())
             account_id = int(input("Enter Account ID: ").strip())
             amount = float(input("Enter amount: ").strip())
+            account_type = input("Enter Account Type (savings/current): ").strip().lower()
 
             if user_choice == 1:
                 if banking.deposit(user_id, account_id, amount):
                     print("Deposit successful.")
+                    logger.log_action(user_id, f"Deposited {amount} into account {account_id}")
                 else:
                     print("Deposit failed.")
 
             elif user_choice == 2:
-                if banking.withdraw(user_id, account_id, amount):
+                if banking.withdraw(user_id, account_id, amount, account_type):
                     print("Withdrawal successful.")
+                    logger.log_action(user_id, f"Withdrew {amount} from account {account_id}")
                 else:
                     print("Withdrawal failed.")
 
@@ -431,7 +438,6 @@ def main():
                     print("Policy not found.")
 
             elif user_choice == 2:
-                user_id = int(input("Enter User ID to create policy for: ").strip())
                 policy_data = {}
                 policy_data['type'] = input("Enter policy type: ").strip()
                 policy_data['coverage_amount'] = float(input("Enter coverage amount: ").strip())
@@ -440,6 +446,7 @@ def main():
                 policy_data['premium_frequency'] = input("Enter premium frequency (monthly/quarterly/yearly): ").strip().lower()
                 if insurance.create_insurance(user_id, policy_data['type'], policy_data['premium_amount'], policy_data['coverage_amount'], policy_data['duration'], policy_data['premium_frequency']):
                     print("Policy created successfully.")
+                    logger.log_action(user_id, "Created new insurance policy")
                 else:
                     print("Failed to create policy.")
 
@@ -447,6 +454,7 @@ def main():
                 policy_id = int(input("Enter Policy ID to cancel: ").strip())
                 if insurance.cancel_insurance_policy(policy_id):
                     print("Policy canceled successfully.")
+                    logger.log_action(user_id, f"Canceled insurance policy with ID {policy_id}")
                 else:
                     print("Failed to cancel policy.")
 
