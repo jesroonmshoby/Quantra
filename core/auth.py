@@ -72,6 +72,7 @@ def login_user(username: str, email: str):
             if verify_password(password, user["password_hash"]):
                 logger.info(f"User logged in: {username}")
                 reset_attempts(username)
+                logger.log_action(user['id'], f"[security] Successful login from system")
                 return user_id  # Return user_id on successful login
             
             else:
