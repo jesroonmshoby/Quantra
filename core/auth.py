@@ -122,8 +122,21 @@ def get_user_details(user_id):
         
         accounts = cursor.fetchall()
 
-        if accounts:
-            return user_info, accounts
+        # Get all Insurance policies associated with user
+        cursor.execute("""
+            SELECT id, policy_type, created_at, coverage_amount, status
+            FROM insurance
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        insurance_policies = cursor.fetchall()
+
+        if accounts or insurance_policies:
+            if not accounts:
+                accounts = None
+            if not insurance_policies:
+                insurance_policies = None
+            return user_info, accounts, insurance_policies
 
                 
         else:

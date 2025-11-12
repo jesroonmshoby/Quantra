@@ -197,7 +197,7 @@ def insurance_menu():
             print("Invalid input. Please enter a valid number.")
 
 def notifications_menu():
-    print("Notifications")
+    print("Notifications:")
     user_id = int(input("Enter User ID to view details: ").strip())
     notification = notifications.get_notifications(user_id)
     if not notification:
@@ -259,11 +259,12 @@ def main():
             helpers.clear_screen()
             user_choice = user_management_menu()
 
+
             if user_choice == 1:
                 user_id = int(input("Enter User ID to view details: "))
-                user_info, account_details = auth.get_user_details(user_id)
+                user_info, account_details, insurance_details = auth.get_user_details(user_id)
 
-                if account_details:
+                if account_details and insurance_details:
 
                     # Print User Summary
                     print("\nUser Summary:")
@@ -279,7 +280,16 @@ def main():
                         print(f"  - Account Type: {acc['account_type']}")
                         print(f"  - Created At: {acc['created_at']}\n")
 
-                elif account_details is None:
+                    # Print Insurance Details
+                    print("\nInsurance Policies:")
+                    for ins in insurance_details:
+                        print(f"  - Policy ID: {ins['id']}")
+                        print(f"  - Policy Type: {ins['policy_type']}")
+                        print(f"  - Coverage Amount: {ins['coverage_amount']}")
+                        print(f"  - Status: {ins['status']}")
+                        print(f"  - Created At: {ins['created_at']}\n")
+
+                elif account_details is None or insurance_details is None:
                     # Print User Summary
                     print("\nUser Summary:")
                     print(f" Username: {user_info['username']}")
@@ -287,7 +297,27 @@ def main():
                     print(f" Role: {user_info['role']}")
                     print(f" Joined: {user_info['created_at']}\n")
 
-                    print("No Accounts found for this user.")
+                    if account_details is None:
+                        print("No Accounts found for this user.\n")
+                    else:
+                        # Print Account Details
+                        print("\nAccount Details:")
+                        for acc in account_details:
+                            print(f"  - Account ID: {acc['id']}")
+                            print(f"  - Account Type: {acc['account_type']}")
+                            print(f"  - Created At: {acc['created_at']}\n")
+
+                    if insurance_details is None:
+                        print("No Insurance Policies found for this user.")
+                    else:
+                        # Print Insurance Details
+                        print("\nInsurance Policies:")
+                        for ins in insurance_details:
+                            print(f"  - Policy ID: {ins['id']}")
+                            print(f"  - Policy Type: {ins['policy_type']}")
+                            print(f"  - Coverage Amount: {ins['coverage_amount']}")
+                            print(f"  - Status: {ins['status']}")
+                            print(f"  - Created At: {ins['created_at']}\n")
 
                 elif user_info is None:
                     print("User not found.")
@@ -378,12 +408,21 @@ def main():
         elif choice == 4:
             helpers.clear_screen()
             user_choice = insurance_menu()
+            
 
             if user_choice == 1:
                 policy_id = int(input("Enter Policy ID to view details: ").strip())
                 details = insurance.get_insurance_details(policy_id)
                 if details:
-                    print(details)
+                    print("\nInsurance Policy Details:")
+                    print(f" Policy Type: {details['policy_type']}")
+                    print(f" Premium Amount: {details['premium_amount']}")
+                    print(f" Coverage Amount: {details['coverage_amount']}")
+                    print(f" Premium Frequency: {details['premium_frequency']}")
+                    print(f" Status: {details['status']}")
+                    print(f" Start Date: {details['start_date']}")
+                    print(f" End Date: {details['end_date']}")
+                    print(f" Next Premium Due: {details['next_premium_due']}\n")
                 else:
                     print("Policy not found.")
 
@@ -391,11 +430,11 @@ def main():
                 user_id = int(input("Enter User ID to create policy for: ").strip())
                 policy_data = {}
                 policy_data['type'] = input("Enter policy type: ").strip()
-                policy_data['amount'] = float(input("Enter policy amount: ").strip())
-                policy_data['duration'] = int(input("Enter policy duration (in years): ").strip())
                 policy_data['coverage_amount'] = float(input("Enter coverage amount: ").strip())
                 policy_data['premium_amount'] = float(input("Enter premium amount: ").strip())
-                if insurance.create_insurance(user_id, policy_data['type'], policy_data['amount'], policy_data['duration'], policy_data['coverage_amount'], policy_data['premium_amount']):
+                policy_data['duration'] = int(input("Enter policy duration (in years): ").strip())
+                policy_data['premium_frequency'] = input("Enter premium frequency (monthly/quarterly/yearly): ").strip().lower()
+                if insurance.create_insurance(user_id, policy_data['type'], policy_data['premium_amount'], policy_data['coverage_amount'], policy_data['duration'], policy_data['premium_frequency']):
                     print("Policy created successfully.")
                 else:
                     print("Failed to create policy.")
