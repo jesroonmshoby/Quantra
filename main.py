@@ -1,3 +1,4 @@
+import hashlib
 import sys
 import os
 # Add the parent directory (QUANTRA/) to sys.path
@@ -197,31 +198,34 @@ def insurance_menu():
             print("Invalid input. Please enter a valid number.")
 
 def notifications_menu():
-    print("Notifications:")
-    user_id = int(input("Enter User ID to view details: ").strip())
+    print("\nNOTIFICATIONS:")
+
+    user_id = int(input("Enter User ID to view notifications: ").strip())
     notification = notifications.get_notifications(user_id)
+    
     if not notification:
-        print("No notifications available.") 
-    else:
-        print("Your Notifications:")
-        for note in notification:
-            status = "Read" if note['is_read'] else "Unread"
-            print(f"ID: {note['id']} | Message: {note['message']} | Status: {status} | Created At: {note['created_at']}")
-    options = [
-        "Mark Notification as Read",
-    ]
-    for index, item in enumerate(options):
-        print(f"{index + 1}. - {item}")
+        print("No notifications available.")
+        return None, None  # Return both user_id and choice
+    
+    print("\nYour Notifications:")
+    for note in notification:
+        status = "✓ Read" if note['is_read'] else "✗ Unread"
+        print(f"ID: {note['id']} | {status} | {note['message']} | {note['created_at']}")
+    
+    print("\n1. Mark Notification as Read")
+    print("0. Back to Main Menu")
 
     while True:
         try:
-            choice = int(input("Enter your choice (1): ").strip())
-            if 1 <= choice <= 1:
-                return int(choice)
+            choice = int(input("Enter your choice (0-1): ").strip())
+            if choice == 0:
+                return user_id, 0
+            elif choice == 1:
+                return user_id, 1  # Return user_id with choice
             else:
-                print("Invalid choice. Please enter 1.")
+                print("Invalid choice. Please enter 0 or 1.")
         except ValueError:
-            print("Invalid input. Please enter a valid number.")
+            print("Invalid input. Please enter a valid number.")
 
 def main():
 
@@ -448,14 +452,14 @@ def main():
 
         elif choice == 5:
             helpers.clear_screen()
-            user_choice = notifications_menu()
-
+            user_id, user_choice = notifications_menu()  # Unpack both values
+            
             if user_choice == 1:
-                notification_id = int(input("Enter Notification ID to mark as read: ").strip())
-                if notifications.mark_as_read(notification_id):
-                    print("Notification marked as read.")
+                notification_id = int(input("\nEnter Notification ID to mark as read: ").strip())
+                if notifications.mark_as_read(notification_id, user_id):  # Pass user_id
+                    print("✓ Notification marked as read.")
                 else:
-                    print("Failed to mark notification as read.")
+                    print("✗ Failed to mark notification as read.")
 
         elif choice == 6:
             helpers.clear_screen()
