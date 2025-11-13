@@ -12,13 +12,14 @@ if conn is None:
     print(f"Error connecting to MySQL server for {db_info}: {err}")
 
 def run_migrations():
+    logger.info("Migration process started", context="Migrations")
     connection = None
     cursor = None
 
     try:
 
         # Connect without specifying a database to create it if it doesn't exist
-        connection, err = get_db_connection()
+        connection = get_db_connection()
         if connection is None:
             print("Failed to connect to the database.")
             return
@@ -34,7 +35,7 @@ def run_migrations():
             query = query.strip()
             if query:
                 cursor.execute(query)
-                logger.debug(f"Executed query: {query[:100]}...", context="Migrations")
+                logger.debug(f"Executed query: {query}", context="Migrations")
 
         connection.commit()
         logger.info("Migration of 'Schema.sql' applied successfully", context="Migrations")

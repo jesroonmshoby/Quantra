@@ -5,11 +5,8 @@ import core.security as security
 
 logger = Logger()
 
-def create_insurance(user_id, policy_type, premium_amount, coverage_amount, policy_duration, premium_frequency='monthly'):
+def create_insurance(user_id, policy_type, premium_amount, coverage_amount, premium_frequency='monthly'):
     try:
-        conn, err = get_db_connection("quantra_db")
-        cursor = conn.cursor()
-
         if not validators.validate_amount(premium_amount) or not validators.validate_amount(coverage_amount):
             logger.error("Invalid premium or coverage amount")
             return None
@@ -24,6 +21,9 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, poli
             'quarterly': 3,
             'yearly': 12
         }
+
+        conn, err = get_db_connection("quantra_db")
+        cursor = conn.cursor()
 
         cursor.execute("""
             INSERT INTO insurance (
@@ -42,7 +42,7 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, poli
                 %s,
                 'active',
                 CURDATE(),
-                DATE_ADD(CURDATE(), INTERVAL %s YEAR),
+                DATE_ADD(CURDATE(), INTERVAL 1 YEAR),
                 DATE_ADD(CURDATE(), INTERVAL %s MONTH)
             )
         """, (
@@ -51,7 +51,6 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, poli
             premium_amount, 
             coverage_amount,
             premium_frequency,
-            policy_duration,
             premium_intervals[premium_frequency]
         ))
 
@@ -81,7 +80,7 @@ def get_insurance_details(policy_id):
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT policy_type, premium_amount, coverage_amount, 
+            SELECT policy_number, policy_type, premium_amount, coverage_amount, 
                    premium_frequency, status, start_date, end_date, next_premium_due
             FROM insurance 
             WHERE id = %s
@@ -93,14 +92,15 @@ def get_insurance_details(policy_id):
             return None
 
         return {
-            'policy_type': policy_details[0],
-            'premium_amount': policy_details[1],
-            'coverage_amount': policy_details[2],
-            'premium_frequency': policy_details[3],
-            'status': policy_details[4],
-            'start_date': policy_details[5],
-            'end_date': policy_details[6],
-            'next_premium_due': policy_details[7]
+            "policy_number": policy_details[0],
+            "policy_type": policy_details[1],
+            "premium_amount": policy_details[2],
+            "coverage_amount": policy_details[3],
+            "premium_frequency": policy_details[4],
+            "status": policy_details[5],
+            "start_date": policy_details[6],
+            "end_date": policy_details[7],
+            "next_premium_due": policy_details[8]
         }
 
     except Exception as e:
@@ -118,7 +118,7 @@ def cancel_insurance_policy(policy_id):
 
         cursor.execute("""
             UPDATE insurance 
-            SET status = 'cancelled' 
+            SET status = 'canceled' 
             WHERE id = %s
         """, (policy_id,))
 

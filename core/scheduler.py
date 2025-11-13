@@ -39,13 +39,7 @@ def apply_loan_interest():
             logger.info(
                 f"Applied interest to {processed_count} loans",
                 context="scheduler:apply_loan_interest"
-            )
-
-        else: # no loans to process
-            logger.info(
-                f"No loans to apply interest to",
-                context="scheduler:apply_loan_interest"
-            )
+    )
 
         cursor.close()
         conn.close()
@@ -92,12 +86,6 @@ def apply_savings_interest():
                 context="scheduler:apply_savings_interest"
             )
 
-        else: # no accounts to process
-            logger.info(
-                f"No savings accounts to apply interest to",
-                context="scheduler:apply_savings_interest"
-            )
-
         cursor.close()
         conn.close()
         return processed_count
@@ -118,6 +106,7 @@ def auto_pay_insurance_premiums(insurance_id):
 
         cursor.execute(f"""SELECT 
         insurance.user_id, 
+        insurance.policy_number, 
         insurance.premium_amount, 
         insurance.premium_frequency, 
         insurance.next_premium_due, 
@@ -131,16 +120,15 @@ def auto_pay_insurance_premiums(insurance_id):
         current_accounts
     WHERE 
         insurance.id = {insurance_id}
-        AND insurance.status = 'active'
         AND insurance.user_id = accounts.user_id
         AND accounts.id = current_accounts.account_id;""")
 
         row = cursor.fetchone()
         if not row:
-            print(f"No insurance or associated current account found for insurance ID {insurance_id} or it is not active.")
+            print(f"No insurance or associated current account found for insurance ID {insurance_id}")
             return
 
-        user_id, premium_amount, premium_frequency, next_premium_due, last_paid_date, account_id, account_type, current_balance = row
+        user_id, policy_number, premium_amount, premium_frequency, next_premium_due, last_paid_date, account_id, account_type, current_balance = row
 
         if date.today().strftime("%Y-%m-%d") > next_premium_due:
             print(f"Premium for insurance ID {insurance_id} is overdue. No payment made.")
@@ -162,15 +150,15 @@ def auto_pay_insurance_premiums(insurance_id):
                     print(f"Unknown premium frequency '{premium_frequency}' for insurance ID {insurance_id}")
                     return
 
-                cursor.execute(f"UPDATE insurance SET next_premium_due = '{next_due_date}', last_paid_date = '{date.today().strftime('%Y-%m-%d')}' WHERE id = {insurance_id}")
+                cursor.execute(f"UPDATE insurances SET next_premium_due = '{next_due_date}', last_paid_date = '{date.today().strftime('%Y-%m-%d')}' WHERE id = {insurance_id}")
                 conn.commit()
                 cursor.close()
                 conn.close()
 
                 logger.log_action(user_id,
-                                f"Auto-paid insurance premium {format_currency(premium_amount)} for Policy ID {insurance_id} from Account #{account_id}")
+                                f"Auto-paid insurance premium {format_currency(premium_amount)} for Policy #{policy_number} from Account #{account_id}")
                 logger.log_system("INFO",
-                                f"Auto-paid insurance premium for policy ID {insurance_id} from account ID {account_id} for user {user_id}", context="scheduler:auto_pay_insurance_premiums")
+                                f"Auto-paid insurance premium for policy #{policy_number} for user {user_id}", context="scheduler:auto_pay_insurance_premiums")
             else:
                 print(f"Insufficient funds in account ID {account_id} to pay premium for insurance ID {insurance_id}")
                 return
@@ -215,6 +203,49 @@ def check_insurance_expiry():
         )
         return 0
     
+def process_immediate_transfer(from_account_id, to_account_id, amount):
+    try:
+        conn, err = get_db_connection("quantra_db")
+        cursor = conn.cursor()
+
+        # Check sufficient funds
+        cursor.execute(
+            f"SELECT balance FROM current_accounts WHERE account_id = {from_account_id}",
+        )
+        balance = cursor.fetchone()[0]
+
+        if balance < amount:
+            logger.warning(
+                f"Insufficient funds in Account #{from_account_id}",
+                context="banking:process_immediate_transfer"
+            )
+            return False
+
+        # Process transfer
+        cursor.execute(
+            f"UPDATE current_accounts SET balance = balance - {amount} WHERE account_id = {from_account_id}",
+        )
+        cursor.execute(
+            f"UPDATE current_accounts SET balance = balance + {amount} WHERE account_id = {to_account_id}",
+        )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        logger.info(
+            f"Transferred {format_currency(amount)} from Account #{from_account_id} to #{to_account_id}",
+            context="banking:process_immediate_transfer"
+        )
+        return True
+
+    except mysql.Error as err:
+        logger.error(
+            f"Transfer failed: {err}",
+            context="banking:process_immediate_transfer"
+        )
+        return False
+    
 def check_upcoming_deadlines(warning_days=3):
     try:
         conn, err = get_db_connection("quantra_db")
@@ -227,6 +258,7 @@ def check_upcoming_deadlines(warning_days=3):
                 loan_accounts.due_date,
                 DATEDIFF(loan_accounts.due_date, CURDATE()) as days_remaining
             FROM loan_accounts, accounts WHERE loan_accounts.account_id = accounts.id
+            AND loan_accounts.status = 'active'
             AND loan_accounts.due_date > CURDATE()
             AND loan_accounts.due_date <= DATE_ADD(CURDATE(), INTERVAL {warning_days} DAY)
         """)
@@ -236,20 +268,20 @@ def check_upcoming_deadlines(warning_days=3):
         cursor.execute(f"""
             SELECT 
                 accounts.user_id,
-                insurance.id,
-                insurance.premium_amount,
-                insurance.next_premium_due,
-                DATEDIFF(insurance.next_premium_due, CURDATE()) as days_remaining
-            FROM insurance, accounts WHERE insurance.user_id = accounts.user_id
-            AND insurance.status = 'active'
-            AND insurance.next_premium_due > CURDATE()
-            AND insurance.next_premium_due <= DATE_ADD(CURDATE(), INTERVAL {warning_days} DAY)
+                insurances.policy_number,
+                insurances.premium_amount,
+                insurances.next_premium_due,
+                DATEDIFF(insurances.next_premium_due, CURDATE()) as days_remaining
+            FROM insurances, accounts WHERE insurances.account_id = accounts.id
+            AND insurances.status = 'active'
+            AND insurances.next_premium_due > CURDATE()
+            AND insurances.next_premium_due <= DATE_ADD(CURDATE(), INTERVAL {warning_days} DAY)
         """)
 
         insurance_warnings = cursor.fetchall()
 
         for warning in loan_warnings:
-            user_id, policy_id, account_id, loan_amount, due_date, days_remaining = warning
+            user_id, account_id, loan_amount, due_date, days_remaining = warning
             logger.log_action(
                 user_id,
                 f"Loan Account #{account_id} has an upcoming payment of {format_currency(loan_amount)} due on {due_date} ({days_remaining} days remaining)"
@@ -261,13 +293,13 @@ def check_upcoming_deadlines(warning_days=3):
             )
 
         for warning in insurance_warnings:
-            user_id, policy_id, premium_amount, next_premium_due, days_remaining = warning
+            user_id, policy_number, premium_amount, next_premium_due, days_remaining = warning
             logger.log_action(
                 user_id,
-                f"Insurance Policy ID {policy_id} has an upcoming premium of {format_currency(premium_amount)} due on {next_premium_due} ({days_remaining} days remaining)"
+                f"Insurance Policy #{policy_number} has an upcoming premium of {format_currency(premium_amount)} due on {next_premium_due} ({days_remaining} days remaining)"
             )
             logger.warning(
-                f"Insurance premium of {format_currency(premium_amount)} for Policy ID {policy_id} "
+                f"Insurance premium of {format_currency(premium_amount)} for Policy #{policy_number} "
                 f"is due in {days_remaining} days (Due: {due_date})",
                 context="scheduler:check_upcoming_deadlines"
             )
@@ -291,11 +323,8 @@ def run_daily_tasks():
 
         # Apply monthly interests
         if date.today().day == 1:
-            savings_interest_count = apply_savings_interest()
-            loan_interest_count = apply_loan_interest()
-        else:
-            savings_interest_count = 0
-            loan_interest_count = 0
+            savings_interest_count = apply_loan_interest()
+            loan_interest_count = apply_savings_interest()
 
         # Check for upcoming deadlines
         check_upcoming_deadlines(warning_days=3)

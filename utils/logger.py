@@ -22,7 +22,7 @@ class Logger:
             conn, err = get_db_connection(self.db_name)
             cursor = conn.cursor()
             cursor.execute(
-                f"INSERT INTO user_logs (user_id, action) VALUES ({user_id}, '{action}')"
+                f"INSERT INTO user_logs (user_id, action) VALUES ({user_id}, {action})"
             )
             conn.commit()
             cursor.close()
@@ -39,14 +39,13 @@ class Logger:
             conn, err = get_db_connection(self.db_name)
             cursor = conn.cursor()
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             cursor.execute(
-                """
+                f"""
                 INSERT INTO system_logs (level, message, context, created_at)
-                VALUES (%s, %s, %s, %s)
-                """,
-                (level, message, context, timestamp)
+                VALUES ({level}, {message}, {context}, {timestamp})
+                """
             )
-            
             conn.commit()
             cursor.close()
             conn.close()
@@ -54,7 +53,7 @@ class Logger:
             print(f"Failed to log system event: {err}")
 
     # Transaction Logs
-    def log_transaction(self, user_id, account_id, amount, transaction_type):
+    def log_transaction(user_id, account_id, amount, transaction_type):
         try:
             conn, err = get_db_connection("quantra_db")
             cursor = conn.cursor()

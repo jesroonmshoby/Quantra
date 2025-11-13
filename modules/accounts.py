@@ -7,36 +7,33 @@ logger = Logger()
 
 def create_account(user_id, account_type, initial_deposit=0.0, interest_rate=None, due_date=None):
     try:
-        conn, err = get_db_connection("quantra_db")
-        cursor = conn.cursor()
-
         if not validators.validate_amount(initial_deposit):
             logger.error(f"Invalid initial deposit amount: {initial_deposit}")
-            print("Invalid initial deposit amount: {}".format(initial_deposit))
             return None
 
         if account_type not in ["savings", "current", "loan"]:
             logger.error(f"Invalid account type: {account_type}")
-            print("Invalid account type: {}".format(account_type))
             return None
         
         if account_type == "loan":
             if not due_date:
                 logger.error(f"Due date is required for loan accounts")
-                print("Due date is required for loan accounts")
                 return None
             if interest_rate is None:
                 logger.error(f"Interest rate is required for loan accounts")
-                print("Interest rate is required for loan accounts")
                 return None
+
+        conn, err = get_db_connection("quantra_db")
+        cursor = conn.cursor()
 
         # Create base account
         cursor.execute("""
             INSERT INTO accounts (user_id, account_type)
             VALUES (%s, %s)
+            RETURNING id
         """, (user_id, account_type))
         
-        account_id = cursor.lastrowid
+        account_id = cursor.fetchone()[0]
 
         # Create specific account type
         if account_type == "savings":
@@ -110,12 +107,6 @@ def close_account(account_id, account_type):
         if balance and balance != 0:
             logger.error(f"Cannot close account {account_id}: Balance must be zero")
             return False
-        
-        # Delete Nessecary Records from Transaction Table
-        cursor.execute("""
-            DELETE FROM transactions 
-            WHERE account_id = %s
-        """, (account_id,))
 
         # Deletes Account
         cursor.execute("""
