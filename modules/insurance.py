@@ -137,3 +137,49 @@ def cancel_insurance_policy(policy_id):
     finally:
         cursor.close()
         conn.close()
+
+def get_user_insurance_policies(user_id):
+    try:
+        conn, err = get_db_connection("quantra_db")
+        if err or not conn:
+            logger.error(f"Failed to connect to database: {err}")
+            return []
+        
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, policy_type, premium_amount, coverage_amount, 
+                   premium_frequency, status, start_date, end_date, next_premium_due
+            FROM insurance 
+            WHERE user_id = %s
+        """, (user_id,))
+
+        policies = cursor.fetchall()
+        if not policies:
+            logger.info(f"No insurance policies found for user {user_id}")
+            return []
+
+        policy_list = []
+        for policy in policies:
+            policy_list.append({
+                'policy_id': policy[0],
+                'policy_type': policy[1],
+                'premium_amount': policy[2],
+                'coverage_amount': policy[3],
+                'premium_frequency': policy[4],
+                'status': policy[5],
+                'start_date': policy[6],
+                'end_date': policy[7],
+                'next_premium_due': policy[8]
+            })
+
+        return policy_list
+
+    except Exception as e:
+        logger.error(f"Failed to get insurance policies for user {user_id}: {e}")
+        return []
+
+    finally:
+        if conn and cursor:
+            cursor.close()
+            conn.close()

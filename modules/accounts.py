@@ -135,3 +135,93 @@ def close_account(account_id, account_type):
         cursor.close()
         conn.close()
 
+def get_account_details(user_id):
+
+    try:
+        # Get database connection
+        conn, err = get_db_connection("quantra_db")
+        if err or not conn:
+            logger.error(f"Database connection failed: {err}")
+            conn, cursor = None, None
+            return None
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get all accounts for the user
+        cursor.execute("""
+            SELECT id, account_type, created_at
+            FROM accounts
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        accounts = cursor.fetchall()
+        
+        if not accounts:
+            logger.info(f"No accounts found for user {user_id}")
+            return []
+        
+        # Fetch specific details for each account based on type
+        detailed_accounts = []
+        
+        for account in accounts:
+            account_id = account['id']
+            account_type = account['account_type']
+            
+            account_details = {
+                'account_id': account_id,
+                'account_type': account_type,
+                'created_at': account['created_at']
+            }
+            
+            # Fetch type-specific details
+            if account_type == 'savings':
+                cursor.execute("""
+                    SELECT balance, interest_rate
+                    FROM savings_accounts
+                    WHERE account_id = %s
+                """, (account_id,))
+                savings_data = cursor.fetchone()
+                
+                if savings_data:
+                    account_details['balance'] = float(savings_data['balance'])
+                    account_details['interest_rate'] = float(savings_data['interest_rate'])
+            
+            elif account_type == 'current':
+                cursor.execute("""
+                    SELECT balance, overdraft_limit
+                    FROM current_accounts
+                    WHERE account_id = %s
+                """, (account_id,))
+                current_data = cursor.fetchone()
+                
+                if current_data:
+                    account_details['balance'] = float(current_data['balance'])
+                    account_details['overdraft_limit'] = float(current_data['overdraft_limit'])
+            
+            elif account_type == 'loan':
+                cursor.execute("""
+                    SELECT loan_amount, interest_rate, due_date
+                    FROM loan_accounts
+                    WHERE account_id = %s
+                """, (account_id,))
+                loan_data = cursor.fetchone()
+                
+                if loan_data:
+                    account_details['loan_amount'] = float(loan_data['loan_amount'])
+                    account_details['interest_rate'] = float(loan_data['interest_rate'])
+                    account_details['due_date'] = loan_data['due_date']
+            
+            detailed_accounts.append(account_details)
+        
+        logger.info(f"Retrieved {len(detailed_accounts)} account(s) for user {user_id}")
+        return detailed_accounts
+    
+    except Exception as e:
+        logger.error(f"Failed to get account details for user {user_id}: {e}")
+        return None
+    
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()

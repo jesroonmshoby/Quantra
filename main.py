@@ -1,6 +1,7 @@
 import hashlib
 import sys
 import os
+
 # Add the parent directory (QUANTRA/) to sys.path
 sys.path.append(os.path.dirname(os.path.abspath(r"C:\Users\hp\Documents\GitHub\Quantra")))
 from config.db_config import get_db_connection
@@ -9,7 +10,7 @@ from config.db_config import get_db_connection
 import mysql.connector as mysql
 from config.db_config import get_db_connection
 from modules import accounts, banking, insurance, loans, notifications
-from core import auth, reports, roles, scheduler, security
+from core import auth, roles, scheduler, security, reports
 from utils import helpers, logger, validators
 from database.migrations import run_migrations
 import time
@@ -182,6 +183,27 @@ def insurance_menu():
         "View Insurance Details",
         "Create Insurance Policy",
         "Cancel Insurance Policy",
+        "Exit to Main Menu"
+    ]
+    for index, item in enumerate(options):
+        print(f"{index + 1}. - {item}")
+
+    while True:
+        try:
+            choice = int(input("Enter your choice (1-4): ").strip())
+            if 1 <= choice <= 4:
+                return int(choice)
+            else:
+                print("Invalid choice. Please enter a number between 1 and 4.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+
+def reports_menu():
+    print("Reports Menu:")
+    options = [
+        "Generate Account Report",
+        "Generate Transaction Report",
+        "Generate Insurance Report",
         "Exit to Main Menu"
     ]
     for index, item in enumerate(options):
@@ -506,7 +528,21 @@ def main():
 
         elif choice == 6:
             helpers.clear_screen()
-            pass  # Reports functionality can be added here
+            user_choice = reports_menu()
+
+            if user_choice == 1:
+                reports.print_account_report(user_id)
+
+            elif user_choice == 2:
+                account_id = int(input("Enter Account ID: ").strip())
+                reports.print_transaction_report(user_id, account_id)
+
+            elif user_choice == 3:
+                reports.print_insurance_report(user_id)
+
+            elif user_choice == 4:
+                helpers.clear_screen()
+                continue
 
         elif choice == 7:
             helpers.clear_screen()
