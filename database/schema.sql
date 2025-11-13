@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS user_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     action VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE
 );
 
 # Table -> system_logs
@@ -47,7 +48,6 @@ CREATE TABLE IF NOT EXISTS insurance (
     user_id INT NOT NULL,
     status ENUM('active', 'expired', 'cancelled') DEFAULT 'active',
     policy_type VARCHAR(100) NOT NULL,
-    policy_type ENUM('health', 'life', 'property') NOT NULL,
     coverage_amount DECIMAL(10, 2) NOT NULL,
     premium_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,       
     premium_frequency ENUM('monthly', 'quarterly', 'yearly') DEFAULT 'monthly',  

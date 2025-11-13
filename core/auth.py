@@ -29,7 +29,7 @@ def register_user(username: str, email: str, password: str):
             return False
 
         hashed_pw = hash_password(password)
-        cursor.execute("INSERT INTO users (username, email, password) VALUES (%s, %s, %s)", (username, email, hashed_pw))
+        cursor.execute("INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)", (username, email, hashed_pw))
         conn.commit()
 
         print("User registered successfully.")
@@ -46,12 +46,13 @@ def register_user(username: str, email: str, password: str):
         conn.close()
 
 
-def login_user(username: str, email: str, password: str):
+def login_user(username: str, email: str):
     try:
         conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+        cursor.execute("SELECT * FROM users WHERE username = %s and email = %s", (username, email))
         user = cursor.fetchone()
+        user_id = user["id"] if user else None
 
         if not user:
             print("User not found.")
@@ -63,16 +64,27 @@ def login_user(username: str, email: str, password: str):
             logger.warning(f"Login attempt on locked account: {username}")
             return False
 
-        if verify_password(password, user["password"]):
-            print("Login successful!")
-            logger.info(f"User logged in: {username}")
-            reset_attempts(username)
-            return True
-        else:
-            print("Incorrect password.")
-            logger.warning(f"Incorrect password for {username}")
-            record_failed_attempt(username)
-            return False
+        max_login_attempts = 3
+        # Allow up to 3 password attempts
+        for attempt in range(1, max_login_attempts + 1):
+            password = input(f"Enter password (Attempt {attempt}/{max_login_attempts}): ")
+            
+            if verify_password(password, user["password_hash"]):
+                logger.info(f"User logged in: {username}")
+                reset_attempts(username)
+
+                return user_id  # Return user_id on successful login
+            
+            else:
+                remaining = max_login_attempts - attempt
+                if remaining > 0:
+                    print(f"Incorrect password. {remaining} attempt(s) remaining.")
+                    logger.warning(f"Incorrect password for {username} - Attempt {attempt}")
+                else:
+                    print("Incorrect password.")
+                    logger.warning(f"Incorrect password for {username} - Final attempt")
+                    record_failed_attempt(username)
+                    return False
 
     except mysql.Error as err:
         print("Database error during login.")
@@ -83,7 +95,6 @@ def login_user(username: str, email: str, password: str):
         cursor.close()
         conn.close()
 
-
 def logout_user(username: str):
     logger.info(f"User logged out: {username}")
     print(f"{username} has logged out successfully.")
@@ -91,40 +102,51 @@ def logout_user(username: str):
 def get_user_details(user_id):
     try:
         conn, err = get_db_connection("quantra_db")
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         
-        cursor.execute(f"""
+        cursor.execute("""
             SELECT username, email, role, created_at 
             FROM users 
-            WHERE id = {user_id}
-        """)
+            WHERE id = %s
+        """, (user_id,))
         
         user_info = cursor.fetchone()
-        if not user_info:
+        if len(user_info) == 0:
             logger.error(f"User ID {user_id} not found")
-            return None
-            
+            return None, None
+        
+        
         # Get all accounts associated with user
-        cursor.execute(f"""
+        cursor.execute("""
             SELECT id, account_type, created_at 
             FROM accounts 
-            WHERE user_id = {user_id}
-        """)
+            WHERE user_id = %s
+        """, (user_id,))
         
         accounts = cursor.fetchall()
+
+        # Get all Insurance policies associated with user
+        cursor.execute("""
+            SELECT id, policy_type, created_at, coverage_amount, status
+            FROM insurance
+            WHERE user_id = %s
+        """, (user_id,))
         
-        user_details = {
-            "user_info": {
-                "username": user_info[0],
-                "email": user_info[1],
-                "role": user_info[2],
-                "joined": user_info[3]
-            },
-            "accounts": accounts
-        }
-        
-        return user_details
-        
+        insurance_policies = cursor.fetchall()
+
+        if accounts or insurance_policies:
+            if not accounts:
+                accounts = None
+            if not insurance_policies:
+                insurance_policies = None
+            return user_info, accounts, insurance_policies
+
+                
+        else:
+            logger.warning(f"No accounts found for user ID {user_id}")
+            return user_info, None
+
+
     except Exception as e:
         logger.error(f"Failed to get user details: {e}")
         return None
@@ -170,12 +192,13 @@ def update_user_details(user_id, updates):
 def change_password(user_id, old_password, new_password):
     # Change user password with verification.
     try:
-        if not is_strong_password(new_password):
-            logger.error("New password does not meet strength requirements")
-            return False
-            
         conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
+
+        if not is_strong_password(new_password):
+            logger.error("New password does not meet strength requirements")
+            print("New password does not meet strength requirements")
+            return False
         
         cursor.execute("""
             SELECT password_hash 
@@ -190,6 +213,7 @@ def change_password(user_id, old_password, new_password):
             
         if not verify_password(old_password, result[0]):
             logger.error("Current password is incorrect")
+            print("Current password is incorrect")
             return False
             
         new_hash = hash_password(new_password)
