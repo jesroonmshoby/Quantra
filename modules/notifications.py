@@ -4,42 +4,73 @@ from utils.logger import Logger
 logger = Logger()
 
 def get_notifications(user_id):
-    """Retrieve all notifications for a user."""
+    """Retrieve all unread notifications/logs for a user."""
     try:
-        db, err = get_db_connection()
-        cursor = db.cursor(dictionary=True)
+        conn, err = get_db_connection("quantra_db")
+        if conn is None:
+            logger.error(f"Database connection failed: {err}")
+            return []
+            
+        cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT id, message, is_read, created_at
-            FROM notifications
-            WHERE user_id = %s
+            SELECT id, action as message, created_at, is_read
+            FROM user_logs
+            WHERE user_id = %s AND is_read = FALSE
             ORDER BY created_at DESC
         """, (user_id,))
-        return cursor.fetchall()
+        
+        logs = cursor.fetchall()
+        logger.debug(f"Retrieved {len(logs)} unread logs for user {user_id}")
+        return logs
+        
     except Exception as e:
-        logger.error(f"Error retrieving notifications for user {user_id}: {e}")
+        logger.error(f"Error retrieving logs for user {user_id}: {e}")
         return []
     finally:
-        db.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
-def mark_as_read(user_id, notification_id):
-    """Mark a specific notification as read for a user."""
+def mark_as_read(log_id, user_id=None):
+    """Mark a specific log/notification as read."""
     try:
-        db = get_db_connection()
-        cursor = db.cursor()
-        cursor.execute("""
-            UPDATE notifications
-            SET is_read = TRUE
-            WHERE id = %s AND user_id = %s
-        """, (notification_id, user_id))
-        db.commit()
+        conn, err = get_db_connection("quantra_db")
+        if conn is None:
+            logger.error(f"Database connection failed: {err}")
+            return False
+            
+        cursor = conn.cursor()
+        
+        if user_id:
+            cursor.execute("""
+                UPDATE user_logs
+                SET is_read = TRUE
+                WHERE id = %s AND user_id = %s
+            """, (log_id, user_id))
+        else:
+            cursor.execute("""
+                UPDATE user_logs
+                SET is_read = TRUE
+                WHERE id = %s
+            """, (log_id,))
+            
+        conn.commit()
 
         if cursor.rowcount == 0:
-            logger.warning(f"No matching notification {notification_id} for user {user_id}.")
+            logger.warning(f"No log found with ID {log_id}")
+            return False
+        
+        logger.info(f"Log {log_id} marked as read")
+        return True
+        
     except Exception as e:
-        logger.error(f"Error marking notification as read: {e}")
+        logger.error(f"Error marking log as read: {e}")
+        return False
     finally:
-        db.close()
+        cursor.close()
+        conn.close()
 
 def send_low_balance_alerts(threshold=1000):
     """Send alerts to users whose account balance falls below the threshold."""
