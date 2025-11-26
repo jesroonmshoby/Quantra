@@ -83,7 +83,7 @@ def authorize():
         elif choice == '2':
             if not register():
                 return False
-            login()
+            user_id=login()
             return user_id
         else:
             print("Invalid choice. Please enter 1 or 2.")
