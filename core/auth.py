@@ -113,7 +113,7 @@ def get_user_details(user_id):
         user_info = cursor.fetchone()
         if len(user_info) == 0:
             logger.error(f"User ID {user_id} not found")
-            return None, None
+            return None, None, None
         
         
         # Get all accounts associated with user
@@ -144,7 +144,7 @@ def get_user_details(user_id):
                 
         else:
             logger.warning(f"No accounts found for user ID {user_id}")
-            return user_info, None
+            return user_info, None, None
 
 
     except Exception as e:
@@ -178,15 +178,14 @@ def update_user_details(user_id, updates):
         """, values)
         
         conn.commit()
+        cursor.close()
+        conn.close()
         logger.info(f"Updated details for user {user_id}")
         return True
         
     except Exception as e:
         logger.error(f"Failed to update user {user_id}: {e}")
         return False
-    finally:
-        cursor.close()
-        conn.close()
 
 
 def change_password(user_id, old_password, new_password):

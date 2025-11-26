@@ -380,7 +380,7 @@ def main():
 
             if user_choice == 1:
                 account_data = {}
-                account_data['account_type'] = input("Enter Account Type: ").strip().lower()
+                account_data['account_type'] = input("Enter Account Type(savings, current, loan): ").strip().lower()
 
                 if account_data['account_type']=='savings' or account_data['account_type']=='current':
                     account_data['initial_deposit'] = float(input("Enter Initial Deposit: ").strip())
@@ -403,7 +403,7 @@ def main():
                         logger.log_action(user_id, "Loan account created")
 
                     else:
-                        print("Failed to create loan account.")
+                        print("Failed to create loan account.")
                     
                 else:
                     print("Invalid account type. Please choose 'savings', 'current', or 'loan'.")
