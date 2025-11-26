@@ -63,7 +63,6 @@ def register():
 
     if auth.register_user(username, email, password):
         print("Registration successful! You can now log in.")
-        logger.log_action(None, f"Welcome new user: {username}")
         return True
     else:
         print("Registration failed. Please try again.")
@@ -85,7 +84,7 @@ def authorize():
             if not register():
                 return False
             login()
-            return True
+            return user_id
         else:
             print("Invalid choice. Please enter 1 or 2.")
 
@@ -466,7 +465,7 @@ def main():
 
             if user_choice == 1:
                 policy_id = int(input("Enter Policy ID to view details: ").strip())
-                details = insurance.get_insurance_details(policy_id)
+                details = insurance.get_insurance_details(policy_id,user_id)
                 if details:
                     print("\nInsurance Policy Details:")
                     print(f" Policy Type: {details['policy_type']}")
@@ -478,7 +477,7 @@ def main():
                     print(f" End Date: {details['end_date']}")
                     print(f" Next Premium Due: {details['next_premium_due']}\n")
                 else:
-                    print("Policy not found.")
+                    print("Policy may be incorrect or does not exist.")
 
             elif user_choice == 2:
                 policy_data = {}

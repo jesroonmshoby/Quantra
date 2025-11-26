@@ -75,7 +75,7 @@ def create_insurance(user_id, policy_type, premium_amount, coverage_amount, poli
         cursor.close()
         conn.close()
 
-def get_insurance_details(policy_id):
+def get_insurance_details(policy_id,user_id):
     try:
         conn, err = get_db_connection("quantra_db")
         cursor = conn.cursor()
@@ -84,8 +84,8 @@ def get_insurance_details(policy_id):
             SELECT policy_type, premium_amount, coverage_amount, 
                    premium_frequency, status, start_date, end_date, next_premium_due
             FROM insurance 
-            WHERE id = %s
-        """, (policy_id,))
+            WHERE id = %s AND user_id = %s
+        """, (policy_id,user_id))
 
         policy_details = cursor.fetchone()
         if not policy_details:
